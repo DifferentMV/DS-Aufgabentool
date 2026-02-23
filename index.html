@@ -271,7 +271,7 @@ function buildResult(){
 
   const n=computeNeeds();
   const dauerVal = n.dauer ? $("inpDauer").value.trim() : "";
-  if(n.dauer && !dauerVal){setError("Bitte eine Dauer eingeben (frei)."); return;}
+  // Dauer ist optional
   if(n.org && orgasmAllowed===null){setError("Bitte Orgasmus-Regel wählen."); return;}
   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen."); return;}
   // JS True typo safe:
@@ -284,7 +284,9 @@ function buildResult(){
 
   $("resultMain").textContent = lines.join("\n");
   const kv=[];
-  if(n.dauer) kv.push(["Dauer", dauerVal]);
+ if(n.dauer && dauerVal){
+  kv.push(["Dauer", dauerVal]);
+}
   if(n.org){
     kv.push(["Orgasmus", orgasmAllowed ? "Gestattet":"Nicht gestattet"]);
     if(orgasmAllowed) kv.push(["Regel", orgasmRule]);
