@@ -273,7 +273,7 @@ function buildResult(){
   const dauerVal = n.dauer ? $("inpDauer").value.trim() : "";
   if(n.dauer && !dauerVal){setError("Bitte eine Dauer eingeben (frei)."); return;}
   if(n.org && orgasmAllowed===null){setError("Bitte Orgasmus-Regel wählen."); return;}
-  if(n.org && orgasmAllowed===True && !orgasmRule){setError("Bitte Regel wählen."); return;}
+  if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen."); return;}
   // JS True typo safe:
   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen (Bildnachweis / ohne wegwischen / Aufnahme)."); return;}
 
