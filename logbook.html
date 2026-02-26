@@ -63,6 +63,7 @@ button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box
   </div>
 
   <button id="saveBtn">Eintrag speichern</button>
+  <button id="reportBtn" class="secondary">Bericht für WhatsApp erstellen</button>
   <button id="clearBtn" class="secondary">Einträge löschen</button>
 
   <div class="toast" id="toast"></div>
@@ -147,6 +148,48 @@ function pickRandomItem(){
 function getEntries(){ return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); }
 function setEntries(data){ localStorage.setItem(LOG_KEY, JSON.stringify(data)); }
 
+function formatDateTimeParts(d){
+  const date = d.toLocaleDateString("de-DE");
+  const time = d.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"});
+  return {date, time};
+}
+
+function buildReportText(entry){
+  const lines=[
+    "Folgende Aufgabe wurde ausgeführt:",
+    "",
+    `Kink: ${entry.bereich}`,
+    `mit folgendem Inhalt: ${entry.aufgabe}`,
+    `am: ${entry.date}`,
+    `Uhrzeit: ${entry.timeOnly}`
+  ];
+  if(entry.dauer) lines.push(`Dauer/Zeit/Häufigkeit: ${entry.dauer}`);
+  if(entry.note) lines.push(`Notiz: ${entry.note}`);
+  return lines.join("\n");
+}
+
+function createReportFromForm(){
+  setError(null);
+  const bereich=$("bereichSelect").value;
+  const aufgabe=$("itemSelect").value;
+  if(!bereich || !aufgabe){ setError("Bitte erst Bereich und Aufgabe wählen."); return; }
+  if(!$("done").checked){ setError("Für einen Ausführungsbericht bitte 'Aufgabe ausgeführt' aktivieren."); return; }
+  const dt = formatDateTimeParts(new Date());
+  const entry={
+    bereich,
+    aufgabe,
+    date:dt.date,
+    timeOnly:dt.time,
+    dauer:$("dauer").value.trim(),
+    note:$("note").value.trim()
+  };
+  const report=buildReportText(entry);
+  const waUrl=`https://wa.me/?text=${encodeURIComponent(report)}`;
+  window.open(waUrl, "_blank");
+  try{ navigator.clipboard.writeText(report); }catch{}
+  showToast("Bericht für WhatsApp erstellt.");
+}
+
 function saveEntry(){
   setError(null);
   const mode=$("modeSelect").value;
@@ -154,8 +197,12 @@ function saveEntry(){
   const aufgabe=$("itemSelect").value;
   if(!mode || !bereich || !aufgabe){ setError("Bitte Modus, Bereich und Eintrag wählen."); return; }
 
+  const now = new Date();
+  const dt = formatDateTimeParts(now);
   const entry={
-    time:new Date().toLocaleString("de-DE"),
+    time:now.toLocaleString("de-DE"),
+    date:dt.date,
+    timeOnly:dt.time,
     mode, bereich, aufgabe,
     done:$("done").checked,
     dauer:$("dauer").value.trim(),
@@ -228,6 +275,7 @@ function wire(){
   $("modeSelect").onchange=renderBereiche;
   $("bereichSelect").onchange=renderItems;
   $("saveBtn").onclick=saveEntry;
+  $("reportBtn").onclick=createReportFromForm;
   $("randomBtn").onclick=pickRandomItem;
   $("clearBtn").onclick=clearAll;
 }
