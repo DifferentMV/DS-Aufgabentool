@@ -7,3 +7,4 @@ GitHub Pages:
 - Repo anlegen
 - beide Dateien ins Repo-Root
 - Settings → Pages → Deploy from branch (main / root)
+ 
