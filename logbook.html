@@ -53,6 +53,8 @@ button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box
       <option value="">Eintrag wählen</option>
     </select>
     <input type="text" id="dauer" placeholder="Dauer / Rahmen (optional)">
+    <button type="button" id="randomBtn" class="secondary">Zufallsaufgabe aus Rubrik</button>
+    <label><input type="checkbox" id="done"> Aufgabe ausgeführt</label>
   </div>
 
   <div class="card">
@@ -129,6 +131,19 @@ function renderItems(){
   i.disabled=false;
 }
 
+function pickRandomItem(){
+  setError(null);
+  const mode=$("modeSelect").value;
+  const bereich=$("bereichSelect").value;
+  if(!mode){ setError("Bitte zuerst einen Modus wählen."); return; }
+  if(!bereich){ setError("Bitte zuerst einen Bereich wählen."); return; }
+  const items=DATA.filter(r=>r.typ===mode && r.bereich===bereich);
+  if(!items.length){ setError("In dieser Rubrik sind keine Einträge vorhanden."); return; }
+  const randomItem=items[Math.floor(Math.random()*items.length)];
+  $("itemSelect").value=randomItem.titel;
+  showToast("🎲 Zufallseintrag gewählt.");
+}
+
 function getEntries(){ return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); }
 function setEntries(data){ localStorage.setItem(LOG_KEY, JSON.stringify(data)); }
 
@@ -142,6 +157,7 @@ function saveEntry(){
   const entry={
     time:new Date().toLocaleString("de-DE"),
     mode, bereich, aufgabe,
+    done:$("done").checked,
     dauer:$("dauer").value.trim(),
     note:$("note").value.trim()
   };
@@ -151,6 +167,7 @@ function saveEntry(){
   setEntries(data);
   $("dauer").value="";
   $("note").value="";
+  $("done").checked=false;
   showToast("✨ Notiert. ✨");
   renderEntries();
 }
@@ -182,6 +199,7 @@ function renderEntries(){
       <div class="timestamp">${e.time}</div>
       <strong>${e.mode}</strong> · ${e.bereich}<br>
       🧩 ${e.aufgabe}<br>
+      ${typeof e.done === "boolean" ? (e.done ? "✅ Ausgeführt<br>" : "⬜ Nicht ausgeführt<br>") : ""}
       ${e.dauer ? `⏱️ ${e.dauer}<br>` : ""}
       ${e.note ? `📝 ${e.note}<br>` : ""}
       <button data-index="${index}" style="margin-top:10px;background:#1a1a25;border:1px solid #333;border-radius:8px;padding:6px 10px;color:#ff2f92;cursor:pointer;">Entfernen</button>
@@ -210,6 +228,7 @@ function wire(){
   $("modeSelect").onchange=renderBereiche;
   $("bereichSelect").onchange=renderItems;
   $("saveBtn").onclick=saveEntry;
+  $("randomBtn").onclick=pickRandomItem;
   $("clearBtn").onclick=clearAll;
 }
 
