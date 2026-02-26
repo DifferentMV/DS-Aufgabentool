@@ -1,509 +1,89 @@
-
-Add button for random task generation
-26. Feb.
-·
-DS-Aufgabentool
-·
-index
-
-Archivieren
-
-Weitergeben
-
-PR erstellen
-
-
-Bildanhang
-Baue mir hier bitte noch einen Button ein, der eine Zufallsaufgabe in dieser Rubrik erstellt
-Kopieren
-Summary
-Ich habe im Bereich „Rahmen festlegen“ einen neuen Button „Zufallsaufgabe in Rubrik“ ergänzt, direkt neben „Aufgabe erstellen“ und „Zurücksetzen“.
-
-Ich habe die Logik ergänzt, die aus der aktuell gewählten Rubrik (aktueller Modus/Typ + Bereich) eine zufällige Aufgabe auswählt, inklusive sinnvoller Fehlermeldungen wenn noch nichts gewählt wurde oder die Rubrik leer ist.
-
-Für den Modus „Kombination“ bleibt die bestehende Auswahl des jeweils anderen Typs erhalten (z. B. Kleidung bleibt, während zufällig eine Aufgabe gesetzt wird), danach wird direkt das Ergebnis gebaut/angezeigt.
-
-Der neue Button ist an das Event-Wiring angebunden (btnRandom -> createRandomTaskInRubrik).
-
-Screenshot
-Erstellter Screenshot
-
-Testing
-
-✅ python3 - <<'PY'\nfrom pathlib import Path\nfrom html.parser import HTMLParser\n\nclass P(HTMLParser):\n pass\n\ntext=Path('index.html').read_text(encoding='utf-8')\nP().feed(text)\nprint('HTML parsed successfully')\nPY
-
-✅ python3 -m http.server 4173 (kurz gestartet für manuellen UI-Check/Screenshot, danach sauber beendet)
-
-Erledigt: Änderungen sind committed und eine PR wurde erstellt.
-
-
-Datei (1)
-ist das gleich wieder an github übertragen? Bitte in normaler deutscher Anfängersprache
-Kopieren
-Kurz gesagt: Nein, nicht automatisch.
-
-Ich habe geprüft:
-
-git log --oneline -n 3 zeigt, dass der neue Stand als Commit lokal da ist (4721e9f ...).
-
-git remote -v zeigt keine Ausgabe → aktuell ist in diesem Repo hier kein GitHub-Remote eingetragen.
-
-Darum kann es von hier aus nicht „automatisch auf GitHub“ hochgeladen werden.
-
-Der neue Button ist aber im Code enthalten (lokal): „Zufallsaufgabe in Rubrik“.
-
-Wenn du willst, kann ich dir als Nächstes ganz einfach sagen, welche 2–3 Befehle du lokal brauchst, um es auf GitHub zu pushen (für Anfänger Schritt für Schritt).
-
-ja, bitte
-Kopieren
-Perfekt 🙌 Dann machen wir es jetzt ganz einfach.
-
-Ich kann es erst dann direkt zu GitHub hochladen, wenn ich die Repo-URL kenne.
-Bis dahin kannst du es mit diesen Befehlen 1:1 machen:
-
-cd /workspace/DS-Aufgabentool
-git branch --show-current
-git remote -v
-Wenn bei git remote -v nichts kommt (ist bei dir aktuell so), dann:
-
-git remote add origin https://github.com/DEINNAME/DEIN-REPO.git
-git push -u origin work
-Wenn origin schon existiert:
-
-git remote set-url origin https://github.com/DEINNAME/DEIN-REPO.git
-git push -u origin work
-Danach auf GitHub:
-
-Repo öffnen
-
-Compare & pull request klicken
-
-PR erstellen
-
-Wenn du willst, schick mir jetzt einfach deine echte GitHub-URL (z. B. https://github.com/name/repo.git), dann gebe ich dir den fertigen Copy-Paste-Befehl ohne Platzhalter.
-
-https://differentmv.github.io/DS-Aufgabentool/
-Kopieren
-Danke, ich habe es direkt versucht.
-
-Ergebnis in einfacher Sprache:
-
-Ich habe dein GitHub-Repo als origin eingetragen.
-
-Das Hochladen (push) hat hier in dieser Umgebung nicht funktioniert, weil die Verbindung zu GitHub blockiert ist (Fehler 403 beim Tunnel).
-
-Du kannst es aber mit genau diesen Befehlen bei dir lokal sofort hochladen:
-
-✅ cd /workspace/DS-Aufgabentool
-
-✅ git remote add origin https://github.com/differentmv/DS-Aufgabentool.git
-
-✅ git remote -v
-
-⚠️ git push -u origin work (hier fehlgeschlagen wegen Netzwerk/Proxy: CONNECT tunnel failed, response 403)
-
-Wenn origin bei dir schon existiert, dann stattdessen:
-
-git remote set-url origin https://github.com/differentmv/DS-Aufgabentool.git
-git push -u origin work
-Wenn du willst, mache ich dir als Nächstes noch die 2 Befehle, um danach direkt einen Pull Request-Link zu bekommen.
-
-ich nutze beides in der Web Version
-Kopieren
-Perfekt, danke für die Info 🙌
-Wenn du nur die Web-Version nutzt (GitHub im Browser), dann geht es am einfachsten so:
-
-Was der Stand ist
-Ich habe geprüft:
-
-Remote ist gesetzt auf dein Repo (differentmv/DS-Aufgabentool)
-
-Branch heißt work
-
-Verwendeter Check:
-
-git remote -v && git branch --show-current
-
-Wichtig für dich (Web-Version)
-Du brauchst kein Terminal, wenn du im Browser arbeitest:
-
-Öffne dein Repo:
-https://github.com/differentmv/DS-Aufgabentool
-
-Falls der Branch work schon auf GitHub ist:
-
-Oben bei Branch-Auswahl work wählen
-
-Auf “Compare & pull request” klicken
-
-Falls work nicht da ist (weil Push lokal blockiert war):
-
-In GitHub-Web den Dateieditor öffnen (index.html)
-
-Änderungen dort einfügen
-
-Unten Commit changes
-
-Dann PR erstellen
-
-Kurz gesagt
-Ja, du kannst beides komplett in der Web-Version machen (Commit + PR).
-
-Der einzige Punkt: Ein lokaler Commit wird erst auf GitHub sichtbar, wenn er wirklich gepusht wurde. Wenn Push nicht geht, einfach direkt im Browser committen.
-
-Bildanhang
-ich verstehe dein "Branch" "gepusht" Gerede nicht
-Kopieren
-Alles gut, ich erklär’s ganz ohne Fachwörter 😊
-
-Ganz einfach:
-Branch = eine „Version/Spur“ deines Projekts.
-
-Push / gepusht = „auf GitHub hochgeladen“.
-
-Warum das wichtig ist
-Deine GitHub-Page baut laut Screenshot aus dem Branch index.
-Das heißt:
-
-👉 Nur Änderungen, die in index auf GitHub sind, erscheinen auf deiner Website.
-Änderungen in work sieht die Website nicht.
-
-Bei dir aktuell
-Ich habe kurz geprüft:
-
-Lokaler Branch ist work
-
-Repo ist mit GitHub verbunden (origin ist gesetzt)
-
-Verwendete Befehle:
-
-git branch --show-current
-
-git remote -v
-
-Was du in der GitHub-Webseite tun musst (ohne Terminal)
-Auf GitHub ins Repo gehen.
-
-Oben den Branch auf work stellen.
-
-Datei index.html öffnen und prüfen, ob der neue Button drin ist.
-
-Dann Pull Request von work ➜ index erstellen.
-
-Mergen.
-
-1–2 Minuten warten, dann ist es auf der Website.
-
-Wenn du willst, schreibe ich dir jetzt als Nächstes genau die Klickfolge mit den exakten Buttons („wo du klicken musst“) in 6 Mini-Schritten.
-
-ja, bitte. Ich verstehe "branch" die Bedeutung nicht, ich suche nur nach Wörtern. Ich bin mit meinem Wissen nicht in der Lage aus deinen Anweisungen die Verbindung zu ziehen "branch meint..."
-Kopieren
-Klar, danke für die Rückmeldung 💛
-Ich erkläre es jetzt nur als Wörter, ganz ohne Technik-Denken.
-
-Ich nutze hier keinen Skill, weil es nur um Begriffserklärung geht.
-
-Git-Wörter in ganz einfacher Sprache
-Branch
-= ein Arbeitszweig / eine Version-Linie.
-Stell dir vor: ein Dokument mit mehreren „Entwürfen“. Jeder Entwurf ist ein Branch.
-
-index (bei dir)
-= der Zweig, aus dem deine Website gebaut wird (also „live“).
-
-work (bei dir)
-= ein anderer Zweig, wo Änderungen liegen können, aber noch nicht live sind.
-
-Commit
-= ein gespeicherter Stand („Speicherpunkt“).
-
-Push / gepusht
-= diesen Stand zu GitHub hochladen.
-
-Pull Request (PR)
-= „Bitte übernimm meine Änderungen von Zweig A nach Zweig B“.
-
-Merge
-= Änderungen zusammenführen (z. B. von work nach index).
-
-Ein Satz, der alles verbindet
-Du änderst etwas in work → speicherst es (commit) → lädst es hoch (push) → übernimmst es in index (PR + merge) → dann erscheint es auf der Website.
-
-Für dich als Merksatz (ultra kurz)
-work = Baustelle
-
-index = live Website
-
-push = hochladen
-
-merge = von Baustelle in live übernehmen
-
-Wenn du willst, schreibe ich dir jetzt als nächstes eine Klick-für-Klick-Anleitung in GitHub Web mit genau den Buttons, die du anklicken musst.
-
-ja, bitte die Anleitung, damit ich das Punkt für Punkt abarbeiten kann inkl der Info "auf Codec" oder auf "Github"
-Kopieren
-Perfekt — hier ist eine Punkt-für-Punkt-Anleitung mit klarer Angabe, wo du klicken musst:
-(✅ GitHub = Browser auf github.com, ✅ Codex = hier im Chat/Tool)
-
-Ziel
-Deine Änderung soll von work nach index kommen, damit GitHub Pages sie live zeigt.
-
-Schritt-für-Schritt
-1) Auf GitHub: Repository öffnen
-Gehe zu: https://github.com/differentmv/DS-Aufgabentool
-
-Das ist alles auf GitHub.
-
-2) Auf GitHub: Prüfen, ob Branch work existiert
-Oben links über der Dateiliste gibt es den Branch-Dropdown (meist steht da index oder main).
-
-Klicke drauf und suche nach work.
-
-Wenn work sichtbar ist: weiter mit Schritt 3.
-Wenn work nicht sichtbar ist: sag mir kurz Bescheid, dann machen wir Plan B (direkt in index ändern).
-
-3) Auf GitHub: Pull Request starten
-Im Branch-Dropdown work auswählen.
-
-GitHub zeigt oft automatisch einen Button: “Compare & pull request”.
-
-Darauf klicken.
-
-Falls der Button nicht erscheint:
-
-Reiter Pull requests öffnen
-
-New pull request
-
-base: index
-
-compare: work
-
-4) Auf GitHub: Pull Request prüfen
-Prüfen, ob bei base wirklich index steht.
-
-Prüfen, ob bei compare wirklich work steht.
-
-Kurz durchscrollen: du solltest Änderungen in index.html sehen (Button „Zufallsaufgabe in Rubrik“).
-
-5) Auf GitHub: Pull Request erstellen
-Titel z. B.: Button "Zufallsaufgabe in Rubrik" hinzufügen
-
-Create pull request klicken.
-
-6) Auf GitHub: Merge ausführen
-Im Pull Request auf Merge pull request klicken.
-
-Danach Confirm merge.
-
-7) Auf GitHub: Live-Website prüfen
-1–3 Minuten warten (GitHub Pages braucht kurz).
-
-Öffne: https://differentmv.github.io/DS-Aufgabentool/
-
-Hard-Reload machen:
-
-Windows: Strg + F5
-
-Mac: Cmd + Shift + R
-
-Sehr wichtig: „Codex“ vs. „GitHub“
-Codex: Hier im Chat/Tool (Code ändern, erklären, unterstützen).
-
-GitHub: Dort passiert das sichtbare Übernehmen (PR, Merge, live Website).
-
-👉 Für dein „live gehen“ ist GitHub der entscheidende Ort.
-
-Wenn du möchtest, bleibe ich jetzt bei dir und wir machen es live Schritt für Schritt:
-Du sagst nur „bin bei Schritt 2“, dann führe ich dich direkt durch den nächsten Klick.
-
-Bildanhang
-zu 2. Da geht es wieder los. Wie sehe ich denn, ob ein Branch Work existiert? meinst du da wo index/work steht?
-Kopieren
-Ja, genau – du bist an der richtigen Stelle ✅
-
-Das Dropdown, wo bei dir index steht, ist genau die Branch-Liste.
-Auf deinem Screenshot sieht man:
-
-index
-
-main
-
-None
-
-➡️ work ist dort nicht drin, also gibt es work aktuell nicht auf GitHub.
-
-Was heißt das für dich?
-Du musst nicht mit work arbeiten.
-Für dich am einfachsten:
-
-Einfacher Weg (ohne work)
-Auf GitHub ins Repo gehen.
-
-Datei index.html öffnen.
-
-Oben rechts auf Stift (Edit this file) klicken.
-
-Änderungen einfügen.
-
-Unten Commit changes.
-
-Sicherstellen, dass auf index committed wird.
-
-Speichern.
-
-1–3 Minuten warten, dann ist es live auf deiner GitHub Page.
-
-Wenn du willst, kann ich dir jetzt als Nächstes genau sagen, welche Textstellen in index.html du kopieren/einfügen musst, damit der Zufalls-Button sicher funktioniert.
-
-Hä? Gestern konntest du bei WoP doch direkt übertragen und hier soll ich mit copy&paste arbeiten?
-Kopieren
-Voll berechtigte Frage 👌
-Du hast recht: Manchmal kann ich direkt hochladen, manchmal nicht.
-
-Warum bei WoP direkt ging – hier aber nicht
-Der Unterschied ist nicht dein Fehler, sondern die Umgebung:
-
-Bei WoP hatte ich offenbar Zugriff, der Push erlaubt hat.
-
-Hier in diesem Container kam beim direkten GitHub-Upload ein Netzwerkfehler (403 über Proxy/Tunnel).
-
-Das heißt: Ich kann hier lokal ändern und committen, aber der letzte Schritt „hoch zu GitHub“ kann blockiert sein.
-
-Wichtig: Du musst nicht immer Copy&Paste machen
-Wenn der Push wieder möglich ist, kann ich das genauso direkt machen wie bei WoP.
-Hier war nur genau dieser Verbindungsschritt blockiert.
-
-Kurz in einem Satz
-Nicht du machst etwas falsch — es ist ein technischer Verbindungs-Unterschied zwischen zwei Sessions/Umgebungen.
-
-Wenn du willst, versuche ich jetzt sofort nochmal den direkten Push und sage dir dann nur:
-
-✅ „ging direkt“ oder
-
-⚠️ „weiterhin blockiert“
-(ohne extra Technik-Gerede).
-
-und wie mache ich den Push con hier möglich?
-Kopieren
-Gute Frage — klar und direkt:
-
-Kurzantwort
-Von hier aus kannst du den Push gerade nicht „einschalten“.
-Der Fehler kommt von der Umgebung (Netzwerk/Proxy blockiert GitHub), nicht von dir.
-
-Was ich geprüft habe
-✅ git remote -v
-→ Remote ist korrekt auf dein Repo gesetzt.
-
-❌ git push -u origin work
-→ Fehler: CONNECT tunnel failed, response 403
-
-❌ ssh -T git@github.com
-→ Fehler: Network is unreachable (Port 22 nicht erreichbar)
-
-Was das bedeutet
-Selbst mit richtigem Repo, Branch und Login geht es hier nicht, solange der Proxy/Firewall GitHub-Verbindungen blockiert.
-
-Wie du es trotzdem sofort erledigst
-Option A (am einfachsten): GitHub-Web
-Datei in GitHub direkt bearbeiten.
-
-Commit changes.
-
-Falls nötig PR auf index.
-
-Pages baut neu.
-
-Option B (lokal auf deinem Rechner)
-Auf deinem eigenen Rechner (mit normalem Internet):
-
-git clone https://github.com/differentmv/DS-Aufgabentool.git
-cd DS-Aufgabentool
-# Änderungen rein
-git add .
-git commit -m "..."
-git push
-Option C (nur mit Admin-Hilfe für diese Umgebung)
-Admin müsste ausgehenden Zugriff erlauben auf:
-
-github.com:443 (HTTPS CONNECT)
-
-optional github.com:22 (SSH)
-
-Wenn du willst, gebe ich dir jetzt nur den GitHub-Web-Weg in 5 Klicks, ohne Terminal.
-
-also willst du mir jetzt sagen, meine Firewall macht Schwierigkeiten? Ich bin zu Hause, in meinem privaten Haushalt
-Kopieren
-Bildanhang
-oder meinst du Einstellungen hier?
-Kopieren
-Ja — die Seite in deinem Screenshot ist nicht die Ursache für den Push-Fehler.
-Das sind GitHub-Umgebungs-/Deployment-Regeln (für Actions/Deployments), nicht die „kann Codex zu GitHub pushen?“-Einstellung.
-Der Push von hier hängt an der Netzwerkverbindung dieser Laufzeitumgebung (Proxy/Tunnel), nicht an diesen Repo-UI-Optionen.
-
-Summary
-Ich habe die Zufallsfunktion minimal korrigiert: Die Rubrik-Items werden jetzt erst geladen, nachdem Modus und Bereich geprüft wurden (klarere Reihenfolge, robustere Validierung).
-
-Ich habe eine doppelte Orgasmus-Regel-Prüfung entfernt und nur die ausführliche Fehlermeldung beibehalten (Code-Redundanz reduziert).
-
-Änderungen sind committed (f7c1c5a) und PR-Daten wurden mit dem Tool erstellt.
-
-Testing
-
-✅ python3 - <<'PY'\nfrom pathlib import Path\nfrom html.parser import HTMLParser\nclass P(HTMLParser):\n pass\nP().feed(Path('index.html').read_text(encoding='utf-8'))\nprint('HTML parsed successfully')\nPY
-
-✅ git diff -- index.html
-
-✅ git status --short && git log --oneline -n 5
-
-Wenn du willst, erkläre ich dir als Nächstes in 2 ganz einfachen Sätzen, woran man in GitHub erkennt, ob etwas „live auf der Website“ ist.
-
-also soll ich das jetzt mit copy und Paste rüber schieben? oder git apply kopieren/patch kopieren?
-Kopieren
-Kurz: Ja – in deinem Fall ist Copy & Paste in GitHub-Web gerade der richtige Weg.
-
-git apply/Patch brauchst du nicht, das ist eher für Leute mit Terminal-Workflow.
-
-Warum:
-
-Ich habe hier geprüft, dass das Repo/Remote richtig gesetzt ist, aber die Verbindung von dieser Umgebung zu GitHub ist geblockt (403).
-
-Deshalb kann ich von hier nicht direkt hochladen.
-
-Checks (hier ausgeführt):
-
-✅ git branch --show-current && git remote -v
-
-⚠️ git ls-remote --heads origin (403 Tunnel/Proxy-Block in dieser Umgebung)
-
-Was du jetzt machen solltest (einfach)
-GitHub öffnen: differentmv/DS-Aufgabentool
-
-Branch index wählen
-
-index.html öffnen → Stift-Symbol (Edit this file)
-
-Inhalt aus Codex übernehmen (Copy & Paste)
-
-Unten Commit changes
-
-1–3 Minuten warten, dann Seite neu laden
-
-Wenn du willst, schreibe ich dir direkt als Nächstes genau welche Textstellen du in index.html ersetzen musst (1:1, ohne Fachwörter).
-
-
-
-
-Diffs
-Protokolle
-
-index.html
-index.html
-+28
--0
-
-@@ -87,50 +87,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Control Panel</title>
+  <meta name="theme-color" content="#0b0c10" />
+  <style>
+    :root{
+      --bg:#0b0c10; --text:#f2f3f5; --muted:#b9bcc6; --line:#242838;
+      --accent:#a46b8a; --btn:#171a24; --btn2:#1c2030; --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:
+      radial-gradient(1000px 600px at 50% 10%, rgba(164,107,138,.18), transparent 60%),
+      radial-gradient(900px 600px at 50% 120%, rgba(107,138,164,.10), transparent 60%),
+      var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:860px;margin:0 auto;padding:28px 18px 42px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    h1{font-size:20px;margin:0;font-weight:600}
+    .sub{color:var(--muted);font-size:13px;margin-top:2px}
+    .ghost{background:transparent;border:1px solid var(--line);color:var(--muted);
+      padding:10px 12px;border-radius:14px;cursor:pointer}
+    .ghost:hover{border-color:#323754;color:var(--text)}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+    .title{font-size:14px;color:var(--muted);margin-bottom:8px}
+    .sep{height:1px;background:var(--line);margin:10px 0}
+    .pillgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+    .pill{background:var(--btn);border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;text-align:left;transition:.12s}
+    .pill:hover{transform:translateY(-1px);border-color:#343a55;background:var(--btn2)}
+    .pill.active{border-color:rgba(164,107,138,.8);box-shadow:0 0 0 3px rgba(164,107,138,.15)}
+    .pill .k{font-size:14px;font-weight:600}
+    .pill .h{font-size:12px;color:var(--muted);margin-top:3px}
+    .stack{display:flex;flex-direction:column;gap:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    input[type=text]{width:100%;background:#0f1117;border:1px solid var(--line);color:var(--text);
+      padding:12px;border-radius:14px;outline:none}
+    .btn{background:linear-gradient(180deg,rgba(164,107,138,.25),rgba(164,107,138,.10));
+      border:1px solid rgba(164,107,138,.55);color:var(--text);padding:12px 14px;border-radius:14px;cursor:pointer;font-weight:600}
+    .btn.secondary{background:var(--btn);border:1px solid var(--line)}
+    .btn.secondary:hover{border-color:#343a55}
+    .small{font-size:12px;color:var(--muted)}
+    .result{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+    .result h2{font-size:13px;color:var(--muted);letter-spacing:.12em;margin:0 0 10px}
+    .main{white-space:pre-line;font-size:16px;margin-bottom:10px}
+    .kv{display:grid;grid-template-columns:140px 1fr;gap:8px 12px;font-size:14px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.10)}
+    .k{color:var(--muted)}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:rgba(17,19,26,.92);
+      border:1px solid var(--line);padding:10px 12px;border-radius:14px;font-size:13px;display:none}
+    .error{display:none;border:1px solid rgba(194,93,106,.55);background:rgba(194,93,106,.08);padding:10px 12px;border-radius:14px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Control Panel</h1>
+        <div class="sub">Sehr intim · weich präsent · minimal</div>
+      </div>
+      <button class="ghost" id="btnReload">Daten neu laden</button>
+    </header>
+
+    <div class="card stack">
+      <div class="stack" id="stepMode">
+        <div class="title">Was möchtest du festlegen?</div>
+        <div class="pillgrid" id="modeGrid"></div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="stack" id="stepBereich" style="display:none;">
+        <div class="title">Bereich wählen</div>
+        <div class="pillgrid" id="bereichGrid"></div>
+      </div>
+
+      <div class="sep" id="sep2" style="display:none;"></div>
+
+      <div class="stack" id="stepItem" style="display:none;">
+        <div class="title">Auswahl</div>
+        <div class="pillgrid" id="itemGrid"></div>
+      </div>
+
+      <div class="sep" id="sep3" style="display:none;"></div>
+
+      <div class="stack" id="stepParams" style="display:none;">
         <div class="title">Rahmen festlegen</div>
 
         <div class="stack" id="dauerBlock">
@@ -529,7 +109,6 @@ index.html
 
         <div class="row" style="margin-top:10px;">
           <button class="btn" id="btnBuild">Aufgabe erstellen</button>
-          <button class="btn secondary" id="btnRandom">Zufallsaufgabe in Rubrik</button>
           <button class="btn secondary" id="btnReset">Zurücksetzen</button>
         </div>
       </div>
@@ -555,7 +134,100 @@ index.html
 
 <script>
 let DATA=[], mode=null, bereich=null, selection=[], currentType=null;
-@@ -231,50 +232,76 @@ function renderParamVisibility(){
+let orgasmAllowed=null, orgasmRule="";
+const $=id=>document.getElementById(id);
+
+function setError(msg){
+  const b=$("errBox");
+  if(!msg){b.style.display="none";b.textContent="";return;}
+  b.style.display="block";b.textContent=msg;
+}
+function showToast(msg){
+  const t=$("toast"); t.textContent=msg||"Kopiert."; t.style.display="block";
+  setTimeout(()=>t.style.display="none",1200);
+}
+
+async function loadCSV(){
+  const res = await fetch("control_panel.csv",{cache:"no-store"});
+  if(!res.ok) throw new Error("control_panel.csv nicht gefunden (muss im selben Ordner liegen).");
+  const text = await res.text();
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+  const header = lines.shift();
+  const sep = header.includes(";") ? ";" : ",";
+  const cols = header.split(sep).map(s=>s.trim().toLowerCase());
+  const idx = {typ:cols.indexOf("typ"),bereich:cols.indexOf("bereich"),titel:cols.indexOf("titel"),dauer:cols.indexOf("dauer"),orgasmus:cols.indexOf("orgasmus")};
+  if(Object.values(idx).some(v=>v<0)) throw new Error("CSV-Header erwartet: typ;bereich;titel;dauer;orgasmus");
+  DATA = lines.map(line=>{
+    const p=line.split(sep).map(x=>(x??"").trim());
+    return {typ:p[idx.typ],bereich:p[idx.bereich],titel:p[idx.titel],
+      dauer:(p[idx.dauer]||"").toLowerCase()==="true", orgasmus:(p[idx.orgasmus]||"").toLowerCase()==="true"};
+  }).filter(r=>r.typ && r.bereich && r.titel);
+}
+
+function renderModes(){
+  const g=$("modeGrid"); g.innerHTML="";
+  const modes=[{k:"Aufgabe",h:"Handlung / Verhalten"},{k:"Kleidung",h:"Erscheinung / Symbolik"},{k:"Kombination",h:"Kleidung + Aufgabe"}];
+  for(const m of modes){
+    const b=document.createElement("button");
+    b.className="pill"+(mode===m.k?" active":"");
+    b.innerHTML=`<div class="k">${m.k}</div><div class="h">${m.h}</div>`;
+    b.onclick=()=>selectMode(m.k);
+    g.appendChild(b);
+  }
+}
+
+function resetAll(){
+  mode=null; bereich=null; selection=[]; currentType=null;
+  orgasmAllowed=null; orgasmRule=""; $("inpDauer").value="";
+  ["stepBereich","stepItem","stepParams","stepResult","sep2","sep3"].forEach(id=>$(id).style.display="none");
+  $("orgSub").style.display="none";
+  document.querySelectorAll('[data-orgsub]').forEach(b=>b.classList.remove("active"));
+  $("orgNo").classList.remove("active"); $("orgYes").classList.remove("active");
+  setError(null);
+  renderModes();
+}
+
+function selectMode(m){
+  mode=m; selection=[]; bereich=null;
+  currentType = (mode==="Kombination") ? "Kleidung" : mode;
+  $("stepBereich").style.display="block";
+  ["stepItem","stepParams","stepResult","sep2","sep3"].forEach(id=>$(id).style.display="none");
+  setError(null);
+  renderModes(); renderBereiche();
+}
+
+function renderBereiche(){
+  const g=$("bereichGrid"); g.innerHTML="";
+  const t = (mode==="Kombination") ? currentType : mode;
+  const bereiche=[...new Set(DATA.filter(r=>r.typ===t).map(r=>r.bereich))].sort((a,b)=>a.localeCompare(b,"de"));
+  for(const bch of bereiche){
+    const b=document.createElement("button");
+    b.className="pill"+(bereich===bch?" active":"");
+    b.innerHTML=`<div class="k">${bch}</div><div class="h">${t}</div>`;
+    b.onclick=()=>{bereich=bch; renderBereiche(); renderItems();};
+    g.appendChild(b);
+  }
+}
+
+function toggleSelection(it){
+  const i=selection.findIndex(s=>s.typ===it.typ && s.bereich===it.bereich && s.titel===it.titel);
+  if(i>=0) selection.splice(i,1); else selection.push(it);
+  renderItems();
+}
+
+function computeNeeds(){
+  return {dauer:selection.some(s=>s.dauer), org:selection.some(s=>s.orgasmus)};
+}
+
+function renderParamVisibility(){
+  const n=computeNeeds();
+  $("dauerBlock").style.display = n.dauer ? "block":"none";
+  $("orgBlock").style.display = n.org ? "block":"none";
+  if(!n.org){
+    orgasmAllowed=null; orgasmRule="";
+    $("orgSub").style.display="none";
+    $("orgNo").classList.remove("active"); $("orgYes").classList.remove("active");
+    document.querySelectorAll('[data-orgsub]').forEach(b=>b.classList.remove("active"));
   }
 }
 
@@ -579,32 +251,6 @@ function renderItems(){
   renderParamVisibility();
   if(mode==="Kombination") setError(`Kombination: erst ${currentType}. 1–2 wählen, dann „Aufgabe erstellen“.`);
   else setError(null);
-}
-
-function getCurrentRubrikItems(){
-  if(!bereich) return [];
-  const t=(mode==="Kombination")?currentType:mode;
-  return DATA.filter(r=>r.typ===t && r.bereich===bereich);
-}
-
-function createRandomTaskInRubrik(){
-  setError(null);
-  const items=getCurrentRubrikItems();
-  if(!mode){ setError("Bitte zuerst einen Modus wählen."); return; }
-  if(!bereich){ setError("Bitte zuerst einen Bereich wählen."); return; }
-  if(items.length===0){ setError("In dieser Rubrik sind keine Einträge vorhanden."); return; }
-
-  const randomItem=items[Math.floor(Math.random()*items.length)];
-
-  if(mode==="Kombination"){
-    const keep=selection.filter(s=>s.typ!==currentType);
-    selection=[...keep, randomItem];
-  }else{
-    selection=[randomItem];
-  }
-
-  renderItems();
-  buildResult();
 }
 
 function buildResult(){
@@ -632,7 +278,31 @@ function buildResult(){
   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen (Bildnachweis / ohne wegwischen / Aufnahme)."); return;}
 
   const lines = selection.slice().sort((a,b)=>{
-@@ -306,50 +333,51 @@ function buildCopyText(){
+    const o=x=>x.typ==="Kleidung"?0:1;
+    return o(a)-o(b) || a.bereich.localeCompare(b.bereich,"de") || a.titel.localeCompare(b.titel,"de");
+  }).map(s=>s.titel);
+
+  $("resultMain").textContent = lines.join("\n");
+  const kv=[];
+ if(n.dauer && dauerVal){
+  kv.push(["Dauer", dauerVal]);
+}
+  if(n.org){
+    kv.push(["Orgasmus", orgasmAllowed ? "Gestattet":"Nicht gestattet"]);
+    if(orgasmAllowed) kv.push(["Regel", orgasmRule]);
+  }
+  const kvEl=$("resultKV"); kvEl.innerHTML="";
+  for(const [k,v] of kv){
+    const k1=document.createElement("div"); k1.className="k"; k1.textContent=k+":";
+    const v1=document.createElement("div"); v1.textContent=v;
+    kvEl.appendChild(k1); kvEl.appendChild(v1);
+  }
+  $("stepResult").style.display="block";
+}
+
+function buildCopyText(){
+  const main=$("resultMain").textContent.trim();
+  const kv=$("resultKV");
   const kids=[...kv.children];
   const out=["DEINE AUFGABE","",""+main];
   if(kids.length){
@@ -658,7 +328,6 @@ function wire(){
     setError(null);
   };
   $("btnBuild").onclick=buildResult;
-  $("btnRandom").onclick=createRandomTaskInRubrik;
 
   $("btnCopy").onclick=async()=>{
     const txt=buildCopyText();
@@ -684,3 +353,191 @@ function wire(){
   try{ await loadCSV(); wire(); resetAll(); }
   catch(e){ wire(); setError(String(e.message||e)); }
 })();
+</script>
+</body>
+</html>
+diff --git a/index.html b/index.html
+index e0b21068d2d6c82577246c5815f85fce3f18ee4e..5317f3f635655a69de3d8f5eba7236c9e26714ea 100644
+--- a/index.html
++++ b/index.html
+@@ -87,50 +87,51 @@
+         <div class="title">Rahmen festlegen</div>
+ 
+         <div class="stack" id="dauerBlock">
+           <div class="small">Dauer (frei):</div>
+           <input type="text" id="inpDauer" placeholder="z.B. 20Min, 2×, heute Abend, 1h" />
+         </div>
+ 
+         <div class="stack" id="orgBlock" style="margin-top:6px;">
+           <div class="small">Orgasmus:</div>
+           <div class="row">
+             <button class="btn secondary" id="orgNo">Nicht gestattet</button>
+             <button class="btn secondary" id="orgYes">Gestattet</button>
+           </div>
+           <div id="orgSub" style="display:none; margin-top:8px;">
+             <div class="small">Wenn gestattet, dann:</div>
+             <div class="row" style="margin-top:6px;">
+               <button class="btn secondary" data-orgsub="Mit Bildnachweis">Mit Bildnachweis</button>
+               <button class="btn secondary" data-orgsub="Ohne wegwischen">Ohne wegwischen</button>
+               <button class="btn secondary" data-orgsub="Mit Aufnahme">Mit Aufnahme</button>
+             </div>
+           </div>
+         </div>
+ 
+         <div class="row" style="margin-top:10px;">
+           <button class="btn" id="btnBuild">Aufgabe erstellen</button>
++          <button class="btn secondary" id="btnRandom">Zufallsaufgabe in Rubrik</button>
+           <button class="btn secondary" id="btnReset">Zurücksetzen</button>
+         </div>
+       </div>
+ 
+       <div class="stack" id="stepResult" style="display:none;">
+         <div class="result">
+           <h2>DEINE AUFGABE</h2>
+           <div class="main" id="resultMain"></div>
+           <div class="kv" id="resultKV"></div>
+         </div>
+         <div class="row">
+           <button class="btn" id="btnCopy">Kopieren</button>
+           <button class="btn secondary" id="btnNew">Neue Auswahl</button>
+         </div>
+         <div class="small">Das Tool liefert Struktur. Die persönliche Ansprache kommt von dir.</div>
+       </div>
+ 
+       <div id="errBox" class="error"></div>
+     </div>
+   </div>
+ 
+   <div class="toast" id="toast">Kopiert.</div>
+ 
+ <script>
+ let DATA=[], mode=null, bereich=null, selection=[], currentType=null;
+@@ -231,50 +232,76 @@ function renderParamVisibility(){
+   }
+ }
+ 
+ function renderItems(){
+   $("sep2").style.display="block";
+   $("stepItem").style.display="block";
+   $("stepParams").style.display="block";
+   $("stepResult").style.display="none";
+   $("itemGrid").innerHTML="";
+   const t=(mode==="Kombination")?currentType:mode;
+   const items=DATA.filter(r=>r.typ===t && r.bereich===bereich);
+   for(const it of items){
+     const sel=selection.some(s=>s.typ===it.typ && s.bereich===it.bereich && s.titel===it.titel);
+     const b=document.createElement("button");
+     b.className="pill"+(sel?" active":"");
+     b.innerHTML=`<div class="k">${it.titel}</div><div class="h">${it.typ} · ${it.bereich}</div>`;
+     b.onclick=()=>toggleSelection(it);
+     $("itemGrid").appendChild(b);
+   }
+   $("sep3").style.display="block";
+   renderParamVisibility();
+   if(mode==="Kombination") setError(`Kombination: erst ${currentType}. 1–2 wählen, dann „Aufgabe erstellen“.`);
+   else setError(null);
+ }
+ 
++function getCurrentRubrikItems(){
++  if(!bereich) return [];
++  const t=(mode==="Kombination")?currentType:mode;
++  return DATA.filter(r=>r.typ===t && r.bereich===bereich);
++}
++
++function createRandomTaskInRubrik(){
++  setError(null);
++  const items=getCurrentRubrikItems();
++  if(!mode){ setError("Bitte zuerst einen Modus wählen."); return; }
++  if(!bereich){ setError("Bitte zuerst einen Bereich wählen."); return; }
++  if(items.length===0){ setError("In dieser Rubrik sind keine Einträge vorhanden."); return; }
++
++  const randomItem=items[Math.floor(Math.random()*items.length)];
++
++  if(mode==="Kombination"){
++    const keep=selection.filter(s=>s.typ!==currentType);
++    selection=[...keep, randomItem];
++  }else{
++    selection=[randomItem];
++  }
++
++  renderItems();
++  buildResult();
++}
++
+ function buildResult(){
+   setError(null);
+   if(selection.length===0){setError("Bitte mindestens eine Auswahl treffen."); return;}
+ 
+   if(mode==="Kombination" && currentType==="Kleidung"){
+     currentType="Aufgabe"; bereich=null;
+     renderBereiche();
+     ["stepItem","stepParams","sep2","sep3"].forEach(id=>$(id).style.display="none");
+     setError("Jetzt Aufgabe wählen. Kleidung bleibt gespeichert.");
+     return;
+   }
+   if(mode==="Kombination"){
+     const hasK=selection.some(s=>s.typ==="Kleidung"), hasA=selection.some(s=>s.typ==="Aufgabe");
+     if(!hasK || !hasA){setError("Für Kombination braucht es mindestens 1 Kleidung und 1 Aufgabe."); return;}
+   }
+ 
+   const n=computeNeeds();
+   const dauerVal = n.dauer ? $("inpDauer").value.trim() : "";
+   // Dauer ist optional
+   if(n.org && orgasmAllowed===null){setError("Bitte Orgasmus-Regel wählen."); return;}
+   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen."); return;}
+   // JS True typo safe:
+   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen (Bildnachweis / ohne wegwischen / Aufnahme)."); return;}
+ 
+   const lines = selection.slice().sort((a,b)=>{
+@@ -306,50 +333,51 @@ function buildCopyText(){
+   const kids=[...kv.children];
+   const out=["DEINE AUFGABE","",""+main];
+   if(kids.length){
+     out.push("");
+     for(let i=0;i<kids.length;i+=2){
+       out.push(`${kids[i].textContent.replace(":","").trim()}: ${kids[i+1].textContent.trim()}`);
+     }
+   }
+   return out.join("\n");
+ }
+ 
+ function wire(){
+   $("btnReload").onclick=async()=>{ try{await loadCSV(); resetAll(); showToast("Daten geladen.");}catch(e){setError(String(e.message||e));} };
+   $("btnReset").onclick=resetAll;
+   $("btnNew").onclick=()=>{
+     selection=[]; bereich=null; $("inpDauer").value="";
+     orgasmAllowed=null; orgasmRule=""; $("orgSub").style.display="none";
+     $("orgNo").classList.remove("active"); $("orgYes").classList.remove("active");
+     document.querySelectorAll('[data-orgsub]').forEach(b=>b.classList.remove("active"));
+     $("stepResult").style.display="none";
+     if(mode==="Kombination"){ currentType="Kleidung"; renderBereiche(); ["stepItem","stepParams","sep2","sep3"].forEach(id=>$(id).style.display="none"); }
+     else { renderBereiche(); ["stepItem","stepParams","sep2","sep3"].forEach(id=>$(id).style.display="none"); }
+     setError(null);
+   };
+   $("btnBuild").onclick=buildResult;
++  $("btnRandom").onclick=createRandomTaskInRubrik;
+ 
+   $("btnCopy").onclick=async()=>{
+     const txt=buildCopyText();
+     try{ await navigator.clipboard.writeText(txt); showToast("Kopiert."); }
+     catch{
+       const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta);
+       ta.select(); document.execCommand("copy"); ta.remove(); showToast("Kopiert.");
+     }
+   };
+ 
+   $("orgNo").onclick=()=>{ orgasmAllowed=false; orgasmRule=""; $("orgNo").classList.add("active"); $("orgYes").classList.remove("active"); $("orgSub").style.display="none";
+     document.querySelectorAll('[data-orgsub]').forEach(b=>b.classList.remove("active"));
+   };
+   $("orgYes").onclick=()=>{ orgasmAllowed=true; $("orgYes").classList.add("active"); $("orgNo").classList.remove("active"); $("orgSub").style.display="block"; };
+   document.querySelectorAll('[data-orgsub]').forEach(b=> b.onclick=()=>{
+     if(orgasmAllowed!==true) return;
+     document.querySelectorAll('[data-orgsub]').forEach(x=>x.classList.remove("active"));
+     b.classList.add("active"); orgasmRule=b.getAttribute("data-orgsub");
+   });
+ }
+ 
+ (async()=>{
+   try{ await loadCSV(); wire(); resetAll(); }
+   catch(e){ wire(); setError(String(e.message||e)); }
+ })();
