@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinky Glam Logbuch</title>
+<style>
+:root{
+  --bg:#0a0a0f;--panel:#11111a;--accent1:#ff2f92;--accent2:#00f0ff;--accent3:#b300ff;--text:#f4f4f8;--muted:#9999aa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 10%, rgba(255,47,146,.15), transparent 40%),radial-gradient(circle at 80% 90%, rgba(0,240,255,.15), transparent 40%),var(--bg);font-family:system-ui,-apple-system,sans-serif;color:var(--text)}
+.wrap{max-width:760px;margin:40px auto;padding:20px}
+h1{text-align:center;font-weight:600;letter-spacing:2px;color:var(--accent1);text-shadow:0 0 12px rgba(255,47,146,.6)}
+.card{background:var(--panel);border-radius:18px;padding:20px;margin-bottom:25px;box-shadow:0 0 25px rgba(179,0,255,.15)}
+.section-title{font-weight:600;margin-bottom:12px;color:var(--accent2);text-shadow:0 0 10px rgba(0,240,255,.6)}
+label{display:block;margin-bottom:8px;cursor:pointer}
+input[type="text"], textarea, select{width:100%;background:#1a1a25;border:1px solid #242838;border-radius:10px;padding:10px;color:white;margin-bottom:10px}
+button{width:100%;padding:14px;background:linear-gradient(90deg,var(--accent1),var(--accent3));border:none;border-radius:14px;font-size:16px;font-weight:600;color:white;cursor:pointer;box-shadow:0 0 20px rgba(255,47,146,.5);transition:.2s}
+button:hover{transform:scale(1.01);box-shadow:0 0 30px rgba(255,47,146,.8)}
+button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box-shadow:none;border:1px solid #333}
+.entry{background:#141420;padding:15px;border-radius:14px;margin-bottom:15px;border-left:4px solid var(--accent1)}
+.timestamp{font-size:12px;color:var(--muted);margin-bottom:6px}
+.toast{text-align:center;margin-top:15px;color:var(--accent2);font-weight:600;text-shadow:0 0 10px rgba(0,240,255,.7);min-height:22px}
+.error{display:none;margin-top:10px;padding:10px;border:1px solid #6b2f52;border-radius:10px;background:rgba(255,47,146,.12);color:#ffd3ea}
+</style>
+</head>
+<body>
+<div id="lock" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 20%, rgba(255,47,146,.25), transparent 40%),radial-gradient(circle at 80% 80%, rgba(0,240,255,.18), transparent 40%),#06060b;z-index:9999;padding:20px;">
+  <div style="width:min(520px,100%);background:#11111a;border:1px solid #242838;border-radius:18px;padding:22px;box-shadow:0 0 30px rgba(179,0,255,.18);">
+    <div style="font-weight:700;letter-spacing:1px;color:#ff2f92;text-shadow:0 0 10px rgba(255,47,146,.6);">✨ Zutritt nur für Eingeweihte ✨</div>
+    <div style="margin-top:8px;color:#9999aa;font-size:13px;">Passwort eingeben, dann darfst du rein.</div>
+    <input id="pw" type="password" placeholder="Passwort" style="margin-top:14px;width:100%;background:#1a1a25;border:1px solid #242838;border-radius:12px;padding:12px;color:#f4f4f8;outline:none;" />
+    <button id="unlockBtn" style="margin-top:12px;width:100%;padding:12px;border:none;border-radius:14px;cursor:pointer;font-weight:700;color:#fff;background:linear-gradient(90deg,#ff2f92,#b300ff);box-shadow:0 0 20px rgba(255,47,146,.5);">Entsperren</button>
+    <div id="lockMsg" style="margin-top:10px;color:#00f0ff;display:none;font-weight:700;text-shadow:0 0 10px rgba(0,240,255,.6);">Nope.</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1>✨ Kinky Glam Logbuch ✨</h1>
+
+  <div class="card">
+    <div class="section-title">🧩 Aufgabe aus Control Panel</div>
+    <select id="modeSelect">
+      <option value="">Modus wählen</option>
+      <option value="Aufgabe">Aufgabe</option>
+      <option value="Kleidung">Kleidung</option>
+    </select>
+    <select id="bereichSelect" disabled>
+      <option value="">Bereich wählen</option>
+    </select>
+    <select id="itemSelect" disabled>
+      <option value="">Eintrag wählen</option>
+    </select>
+    <input type="text" id="dauer" placeholder="Dauer / Rahmen (optional)">
+  </div>
+
+  <div class="card">
+    <div class="section-title">📝 Notiz</div>
+    <textarea id="note" rows="3" placeholder="Optional…"></textarea>
+  </div>
+
+  <button id="saveBtn">Eintrag speichern</button>
+  <button id="clearBtn" class="secondary">Einträge löschen</button>
+
+  <div class="toast" id="toast"></div>
+  <div class="error" id="err"></div>
+
+  <hr style="margin:40px 0;border-color:#222">
+  <div id="entries"></div>
+</div>
+
+<script>
+const APP_PASSWORD = "Anja&Marlo2020";
+const LOG_KEY = "kinkyLog";
+let DATA=[];
+const $=id=>document.getElementById(id);
+
+function setError(msg){
+  const err=$("err");
+  if(!msg){err.style.display="none";err.textContent="";return;}
+  err.style.display="block";err.textContent=msg;
+}
+function showToast(msg){
+  $("toast").textContent=msg;
+  setTimeout(()=>{$("toast").textContent="";},1700);
+}
+
+async function loadCSV(){
+  const res = await fetch("control_panel.csv", {cache:"no-store"});
+  if(!res.ok) throw new Error("control_panel.csv nicht gefunden.");
+  const text = await res.text();
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  const header = lines.shift();
+  const sep = header.includes(";") ? ";" : ",";
+  const cols = header.split(sep).map(s=>s.trim().toLowerCase());
+  const idx = {typ:cols.indexOf("typ"),bereich:cols.indexOf("bereich"),titel:cols.indexOf("titel")};
+  if(Object.values(idx).some(v=>v<0)) throw new Error("CSV-Header erwartet: typ;bereich;titel;...");
+  DATA = lines.map(line=>{
+    const p=line.split(sep).map(x=>(x??"").trim());
+    return {typ:p[idx.typ], bereich:p[idx.bereich], titel:p[idx.titel]};
+  }).filter(r=>r.typ && r.bereich && r.titel);
+}
+
+function renderBereiche(){
+  const mode=$("modeSelect").value;
+  const b=$("bereichSelect");
+  b.innerHTML='<option value="">Bereich wählen</option>';
+  $("itemSelect").innerHTML='<option value="">Eintrag wählen</option>';
+  $("itemSelect").disabled=true;
+  if(!mode){ b.disabled=true; return; }
+  const bereiche=[...new Set(DATA.filter(r=>r.typ===mode).map(r=>r.bereich))].sort((a,c)=>a.localeCompare(c,"de"));
+  for(const name of bereiche){
+    const o=document.createElement("option"); o.value=name; o.textContent=name; b.appendChild(o);
+  }
+  b.disabled=false;
+}
+
+function renderItems(){
+  const mode=$("modeSelect").value;
+  const bereich=$("bereichSelect").value;
+  const i=$("itemSelect");
+  i.innerHTML='<option value="">Eintrag wählen</option>';
+  if(!mode || !bereich){ i.disabled=true; return; }
+  const items=DATA.filter(r=>r.typ===mode && r.bereich===bereich).sort((a,b)=>a.titel.localeCompare(b.titel,"de"));
+  for(const it of items){
+    const o=document.createElement("option"); o.value=it.titel; o.textContent=it.titel; i.appendChild(o);
+  }
+  i.disabled=false;
+}
+
+function getEntries(){ return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); }
+function setEntries(data){ localStorage.setItem(LOG_KEY, JSON.stringify(data)); }
+
+function saveEntry(){
+  setError(null);
+  const mode=$("modeSelect").value;
+  const bereich=$("bereichSelect").value;
+  const aufgabe=$("itemSelect").value;
+  if(!mode || !bereich || !aufgabe){ setError("Bitte Modus, Bereich und Eintrag wählen."); return; }
+
+  const entry={
+    time:new Date().toLocaleString("de-DE"),
+    mode, bereich, aufgabe,
+    dauer:$("dauer").value.trim(),
+    note:$("note").value.trim()
+  };
+
+  const data=getEntries();
+  data.unshift(entry);
+  setEntries(data);
+  $("dauer").value="";
+  $("note").value="";
+  showToast("✨ Notiert. ✨");
+  renderEntries();
+}
+
+function deleteEntry(index){
+  if(!confirm("Diesen Eintrag wirklich entfernen?")) return;
+  const data=getEntries();
+  data.splice(index,1);
+  setEntries(data);
+  renderEntries();
+  showToast("✨ Entfernt. ✨");
+}
+
+function clearAll(){
+  if(!confirm("Wirklich ALLE Einträge löschen?")) return;
+  localStorage.removeItem(LOG_KEY);
+  renderEntries();
+  showToast("✨ Weg. ✨");
+}
+
+function renderEntries(){
+  const container=$("entries");
+  container.innerHTML="";
+  const data=getEntries();
+  data.forEach((e,index)=>{
+    const div=document.createElement("div");
+    div.className="entry";
+    div.innerHTML=`
+      <div class="timestamp">${e.time}</div>
+      <strong>${e.mode}</strong> · ${e.bereich}<br>
+      🧩 ${e.aufgabe}<br>
+      ${e.dauer ? `⏱️ ${e.dauer}<br>` : ""}
+      ${e.note ? `📝 ${e.note}<br>` : ""}
+      <button data-index="${index}" style="margin-top:10px;background:#1a1a25;border:1px solid #333;border-radius:8px;padding:6px 10px;color:#ff2f92;cursor:pointer;">Entfernen</button>
+    `;
+    container.appendChild(div);
+  });
+  container.querySelectorAll("button[data-index]").forEach(btn=>{
+    btn.onclick=()=>deleteEntry(Number(btn.getAttribute("data-index")));
+  });
+}
+
+function unlockOk(){
+  $("lock").style.display="none";
+  sessionStorage.setItem("kinkyLogUnlocked", "1");
+}
+function tryUnlock(){
+  if($("pw").value===APP_PASSWORD){ $("lockMsg").style.display="none"; unlockOk(); }
+  else { $("lockMsg").style.display="block"; $("pw").focus(); $("pw").select(); }
+}
+
+function wire(){
+  $("unlockBtn").onclick=tryUnlock;
+  $("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+  if(sessionStorage.getItem("kinkyLogUnlocked")==="1") unlockOk();
+
+  $("modeSelect").onchange=renderBereiche;
+  $("bereichSelect").onchange=renderItems;
+  $("saveBtn").onclick=saveEntry;
+  $("clearBtn").onclick=clearAll;
+}
+
+(async()=>{
+  try{ await loadCSV(); }
+  catch(e){ setError(String(e.message||e)); }
+  wire();
+  renderEntries();
+})();
+</script>
+</body>
+</html>
