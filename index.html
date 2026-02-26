@@ -109,6 +109,7 @@
 
         <div class="row" style="margin-top:10px;">
           <button class="btn" id="btnBuild">Aufgabe erstellen</button>
+          <button class="btn secondary" id="btnRandom">Zufallsaufgabe in Rubrik</button>
           <button class="btn secondary" id="btnReset">Zurücksetzen</button>
         </div>
       </div>
@@ -253,6 +254,33 @@ function renderItems(){
   else setError(null);
 }
 
+function getCurrentRubrikItems(){
+  if(!bereich) return [];
+  const t=(mode==="Kombination") ? currentType : mode;
+  return DATA.filter(r=>r.typ===t && r.bereich===bereich);
+}
+
+function createRandomTaskInRubrik(){
+  setError(null);
+  if(!mode){ setError("Bitte zuerst einen Modus wählen."); return; }
+  if(!bereich){ setError("Bitte zuerst einen Bereich wählen."); return; }
+
+  const items=getCurrentRubrikItems();
+  if(items.length===0){ setError("In dieser Rubrik sind keine Einträge vorhanden."); return; }
+
+  const randomItem=items[Math.floor(Math.random()*items.length)];
+
+  if(mode==="Kombination") {
+    const keep=selection.filter(s=>s.typ!==currentType);
+    selection=[...keep, randomItem];
+  } else {
+    selection=[randomItem];
+  }
+
+  renderItems();
+  buildResult();
+}
+
 function buildResult(){
   setError(null);
   if(selection.length===0){setError("Bitte mindestens eine Auswahl treffen."); return;}
@@ -271,10 +299,8 @@ function buildResult(){
 
   const n=computeNeeds();
   const dauerVal = n.dauer ? $("inpDauer").value.trim() : "";
-  if(n.dauer && !dauerVal){setError("Bitte eine Dauer eingeben (frei)."); return;}
+  // Dauer ist optional
   if(n.org && orgasmAllowed===null){setError("Bitte Orgasmus-Regel wählen."); return;}
-  if(n.org && orgasmAllowed===True && !orgasmRule){setError("Bitte Regel wählen."); return;}
-  // JS True typo safe:
   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen (Bildnachweis / ohne wegwischen / Aufnahme)."); return;}
 
   const lines = selection.slice().sort((a,b)=>{
@@ -284,7 +310,9 @@ function buildResult(){
 
   $("resultMain").textContent = lines.join("\n");
   const kv=[];
-  if(n.dauer) kv.push(["Dauer", dauerVal]);
+  if(n.dauer && dauerVal){
+    kv.push(["Dauer", dauerVal]);
+  }
   if(n.org){
     kv.push(["Orgasmus", orgasmAllowed ? "Gestattet":"Nicht gestattet"]);
     if(orgasmAllowed) kv.push(["Regel", orgasmRule]);
@@ -326,6 +354,7 @@ function wire(){
     setError(null);
   };
   $("btnBuild").onclick=buildResult;
+  $("btnRandom").onclick=createRandomTaskInRubrik;
 
   $("btnCopy").onclick=async()=>{
     const txt=buildCopyText();
