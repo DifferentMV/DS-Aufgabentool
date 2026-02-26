@@ -109,6 +109,7 @@
 
         <div class="row" style="margin-top:10px;">
           <button class="btn" id="btnBuild">Aufgabe erstellen</button>
+          <button class="btn secondary" id="btnRandom">Zufallsaufgabe in Rubrik</button>
           <button class="btn secondary" id="btnReset">Zurücksetzen</button>
         </div>
       </div>
@@ -253,6 +254,33 @@ function renderItems(){
   else setError(null);
 }
 
+function getCurrentRubrikItems(){
+  if(!bereich) return [];
+  const t=(mode==="Kombination") ? currentType : mode;
+  return DATA.filter(r=>r.typ===t && r.bereich===bereich);
+}
+
+function createRandomTaskInRubrik(){
+  setError(null);
+  if(!mode){ setError("Bitte zuerst einen Modus wählen."); return; }
+  if(!bereich){ setError("Bitte zuerst einen Bereich wählen."); return; }
+
+  const items=getCurrentRubrikItems();
+  if(items.length===0){ setError("In dieser Rubrik sind keine Einträge vorhanden."); return; }
+
+  const randomItem=items[Math.floor(Math.random()*items.length)];
+
+  if(mode==="Kombination") {
+    const keep=selection.filter(s=>s.typ!==currentType);
+    selection=[...keep, randomItem];
+  } else {
+    selection=[randomItem];
+  }
+
+  renderItems();
+  buildResult();
+}
+
 function buildResult(){
   setError(null);
   if(selection.length===0){setError("Bitte mindestens eine Auswahl treffen."); return;}
@@ -273,8 +301,6 @@ function buildResult(){
   const dauerVal = n.dauer ? $("inpDauer").value.trim() : "";
   // Dauer ist optional
   if(n.org && orgasmAllowed===null){setError("Bitte Orgasmus-Regel wählen."); return;}
-  if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen."); return;}
-  // JS True typo safe:
   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen (Bildnachweis / ohne wegwischen / Aufnahme)."); return;}
 
   const lines = selection.slice().sort((a,b)=>{
@@ -284,9 +310,9 @@ function buildResult(){
 
   $("resultMain").textContent = lines.join("\n");
   const kv=[];
- if(n.dauer && dauerVal){
-  kv.push(["Dauer", dauerVal]);
-}
+  if(n.dauer && dauerVal){
+    kv.push(["Dauer", dauerVal]);
+  }
   if(n.org){
     kv.push(["Orgasmus", orgasmAllowed ? "Gestattet":"Nicht gestattet"]);
     if(orgasmAllowed) kv.push(["Regel", orgasmRule]);
@@ -328,6 +354,7 @@ function wire(){
     setError(null);
   };
   $("btnBuild").onclick=buildResult;
+  $("btnRandom").onclick=createRandomTaskInRubrik;
 
   $("btnCopy").onclick=async()=>{
     const txt=buildCopyText();
@@ -356,183 +383,3 @@ function wire(){
 </script>
 </body>
 </html>
-         <div class="title">Rahmen festlegen</div>
- 
-         <div class="stack" id="dauerBlock">
-           <div class="small">Dauer (frei):</div>
-           <input type="text" id="inpDauer" placeholder="z.B. 20Min, 2×, heute Abend, 1h" />
-         </div>
- 
-         <div class="stack" id="orgBlock" style="margin-top:6px;">
-           <div class="small">Orgasmus:</div>
-           <div class="row">
-             <button class="btn secondary" id="orgNo">Nicht gestattet</button>
-             <button class="btn secondary" id="orgYes">Gestattet</button>
-           </div>
-           <div id="orgSub" style="display:none; margin-top:8px;">
-             <div class="small">Wenn gestattet, dann:</div>
-             <div class="row" style="margin-top:6px;">
-               <button class="btn secondary" data-orgsub="Mit Bildnachweis">Mit Bildnachweis</button>
-               <button class="btn secondary" data-orgsub="Ohne wegwischen">Ohne wegwischen</button>
-               <button class="btn secondary" data-orgsub="Mit Aufnahme">Mit Aufnahme</button>
-             </div>
-           </div>
-         </div>
- 
-         <div class="row" style="margin-top:10px;">
-           <button class="btn" id="btnBuild">Aufgabe erstellen</button>
-+          <button class="btn secondary" id="btnRandom">Zufallsaufgabe in Rubrik</button>
-           <button class="btn secondary" id="btnReset">Zurücksetzen</button>
-         </div>
-       </div>
- 
-       <div class="stack" id="stepResult" style="display:none;">
-         <div class="result">
-           <h2>DEINE AUFGABE</h2>
-           <div class="main" id="resultMain"></div>
-           <div class="kv" id="resultKV"></div>
-         </div>
-         <div class="row">
-           <button class="btn" id="btnCopy">Kopieren</button>
-           <button class="btn secondary" id="btnNew">Neue Auswahl</button>
-         </div>
-         <div class="small">Das Tool liefert Struktur. Die persönliche Ansprache kommt von dir.</div>
-       </div>
- 
-       <div id="errBox" class="error"></div>
-     </div>
-   </div>
- 
-   <div class="toast" id="toast">Kopiert.</div>
- 
- <script>
- let DATA=[], mode=null, bereich=null, selection=[], currentType=null;
-@@ -231,50 +232,76 @@ function renderParamVisibility(){
-   }
- }
- 
- function renderItems(){
-   $("sep2").style.display="block";
-   $("stepItem").style.display="block";
-   $("stepParams").style.display="block";
-   $("stepResult").style.display="none";
-   $("itemGrid").innerHTML="";
-   const t=(mode==="Kombination")?currentType:mode;
-   const items=DATA.filter(r=>r.typ===t && r.bereich===bereich);
-   for(const it of items){
-     const sel=selection.some(s=>s.typ===it.typ && s.bereich===it.bereich && s.titel===it.titel);
-     const b=document.createElement("button");
-     b.className="pill"+(sel?" active":"");
-     b.innerHTML=`<div class="k">${it.titel}</div><div class="h">${it.typ} · ${it.bereich}</div>`;
-     b.onclick=()=>toggleSelection(it);
-     $("itemGrid").appendChild(b);
-   }
-   $("sep3").style.display="block";
-   renderParamVisibility();
-   if(mode==="Kombination") setError(`Kombination: erst ${currentType}. 1–2 wählen, dann „Aufgabe erstellen“.`);
-   else setError(null);
- }
- 
-+function getCurrentRubrikItems(){
-+  if(!bereich) return [];
-+  const t=(mode==="Kombination")?currentType:mode;
-+  return DATA.filter(r=>r.typ===t && r.bereich===bereich);
-+}
-+
-+function createRandomTaskInRubrik(){
-+  setError(null);
-+  const items=getCurrentRubrikItems();
-+  if(!mode){ setError("Bitte zuerst einen Modus wählen."); return; }
-+  if(!bereich){ setError("Bitte zuerst einen Bereich wählen."); return; }
-+  if(items.length===0){ setError("In dieser Rubrik sind keine Einträge vorhanden."); return; }
-+
-+  const randomItem=items[Math.floor(Math.random()*items.length)];
-+
-+  if(mode==="Kombination"){
-+    const keep=selection.filter(s=>s.typ!==currentType);
-+    selection=[...keep, randomItem];
-+  }else{
-+    selection=[randomItem];
-+  }
-+
-+  renderItems();
-+  buildResult();
-+}
-+
- function buildResult(){
-   setError(null);
-   if(selection.length===0){setError("Bitte mindestens eine Auswahl treffen."); return;}
- 
-   if(mode==="Kombination" && currentType==="Kleidung"){
-     currentType="Aufgabe"; bereich=null;
-     renderBereiche();
-     ["stepItem","stepParams","sep2","sep3"].forEach(id=>$(id).style.display="none");
-     setError("Jetzt Aufgabe wählen. Kleidung bleibt gespeichert.");
-     return;
-   }
-   if(mode==="Kombination"){
-     const hasK=selection.some(s=>s.typ==="Kleidung"), hasA=selection.some(s=>s.typ==="Aufgabe");
-     if(!hasK || !hasA){setError("Für Kombination braucht es mindestens 1 Kleidung und 1 Aufgabe."); return;}
-   }
- 
-   const n=computeNeeds();
-   const dauerVal = n.dauer ? $("inpDauer").value.trim() : "";
-   // Dauer ist optional
-   if(n.org && orgasmAllowed===null){setError("Bitte Orgasmus-Regel wählen."); return;}
-   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen."); return;}
-   // JS True typo safe:
-   if(n.org && orgasmAllowed===true && !orgasmRule){setError("Bitte Regel wählen (Bildnachweis / ohne wegwischen / Aufnahme)."); return;}
- 
-   const lines = selection.slice().sort((a,b)=>{
-@@ -306,50 +333,51 @@ function buildCopyText(){
-   const kids=[...kv.children];
-   const out=["DEINE AUFGABE","",""+main];
-   if(kids.length){
-     out.push("");
-     for(let i=0;i<kids.length;i+=2){
-       out.push(`${kids[i].textContent.replace(":","").trim()}: ${kids[i+1].textContent.trim()}`);
-     }
-   }
-   return out.join("\n");
- }
- 
- function wire(){
-   $("btnReload").onclick=async()=>{ try{await loadCSV(); resetAll(); showToast("Daten geladen.");}catch(e){setError(String(e.message||e));} };
-   $("btnReset").onclick=resetAll;
-   $("btnNew").onclick=()=>{
-     selection=[]; bereich=null; $("inpDauer").value="";
-     orgasmAllowed=null; orgasmRule=""; $("orgSub").style.display="none";
-     $("orgNo").classList.remove("active"); $("orgYes").classList.remove("active");
-     document.querySelectorAll('[data-orgsub]').forEach(b=>b.classList.remove("active"));
-     $("stepResult").style.display="none";
-     if(mode==="Kombination"){ currentType="Kleidung"; renderBereiche(); ["stepItem","stepParams","sep2","sep3"].forEach(id=>$(id).style.display="none"); }
-     else { renderBereiche(); ["stepItem","stepParams","sep2","sep3"].forEach(id=>$(id).style.display="none"); }
-     setError(null);
-   };
-   $("btnBuild").onclick=buildResult;
-+  $("btnRandom").onclick=createRandomTaskInRubrik;
- 
-   $("btnCopy").onclick=async()=>{
-     const txt=buildCopyText();
-     try{ await navigator.clipboard.writeText(txt); showToast("Kopiert."); }
-     catch{
-       const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta);
-       ta.select(); document.execCommand("copy"); ta.remove(); showToast("Kopiert.");
-     }
-   };
- 
-   $("orgNo").onclick=()=>{ orgasmAllowed=false; orgasmRule=""; $("orgNo").classList.add("active"); $("orgYes").classList.remove("active"); $("orgSub").style.display="none";
-     document.querySelectorAll('[data-orgsub]').forEach(b=>b.classList.remove("active"));
-   };
-   $("orgYes").onclick=()=>{ orgasmAllowed=true; $("orgYes").classList.add("active"); $("orgNo").classList.remove("active"); $("orgSub").style.display="block"; };
-   document.querySelectorAll('[data-orgsub]').forEach(b=> b.onclick=()=>{
-     if(orgasmAllowed!==true) return;
-     document.querySelectorAll('[data-orgsub]').forEach(x=>x.classList.remove("active"));
-     b.classList.add("active"); orgasmRule=b.getAttribute("data-orgsub");
-   });
- }
- 
- (async()=>{
-   try{ await loadCSV(); wire(); resetAll(); }
-   catch(e){ wire(); setError(String(e.message||e)); }
- })();
