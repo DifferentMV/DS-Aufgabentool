@@ -107,6 +107,14 @@
           </div>
         </div>
 
+        <div class="stack" id="pushBlock" style="margin-top:6px;">
+          <div class="small">Push ans Handy (ntfy):</div>
+          <input type="text" id="pushTopic" placeholder="ntfy Topic (z.B. my-secret-task-topic-4711)" />
+          <input type="text" id="pushToken" placeholder="Optional: ntfy Access Token" />
+          <label class="small"><input type="checkbox" id="pushOnBuild" /> Bei „Aufgabe erstellen" automatisch Push senden</label>
+          <button class="btn secondary" id="btnPushTest" type="button">Push testen</button>
+        </div>
+
         <div class="row" style="margin-top:10px;">
           <button class="btn" id="btnBuild">Aufgabe erstellen</button>
           <button class="btn secondary" id="btnRandom">Zufallsaufgabe in Rubrik</button>
@@ -136,6 +144,7 @@
 <script>
 let DATA=[], mode=null, bereich=null, selection=[], currentType=null;
 let orgasmAllowed=null, orgasmRule="";
+const PUSH_SETTINGS_KEY="controlPanelPushSettings";
 const $=id=>document.getElementById(id);
 
 function setError(msg){
@@ -146,6 +155,58 @@ function setError(msg){
 function showToast(msg){
   const t=$("toast"); t.textContent=msg||"Kopiert."; t.style.display="block";
   setTimeout(()=>t.style.display="none",1200);
+}
+
+function getPushSettings(){
+  return JSON.parse(localStorage.getItem(PUSH_SETTINGS_KEY) || "{}");
+}
+function savePushSettings(){
+  const settings={
+    topic: $("pushTopic").value.trim(),
+    token: $("pushToken").value.trim(),
+    auto: $("pushOnBuild").checked
+  };
+  localStorage.setItem(PUSH_SETTINGS_KEY, JSON.stringify(settings));
+}
+function restorePushSettings(){
+  const s=getPushSettings();
+  if(s.topic) $("pushTopic").value=s.topic;
+  if(s.token) $("pushToken").value=s.token;
+  $("pushOnBuild").checked=!!s.auto;
+}
+async function sendNtfyPush(message, title){
+  const topic=$("pushTopic").value.trim();
+  if(!topic){ setError("Bitte ntfy Topic eintragen."); return false; }
+  const token=$("pushToken").value.trim();
+  const headers={
+    "Content-Type":"text/plain; charset=utf-8",
+    "Title": title || "Neue Aufgabe",
+    "Priority":"default",
+    "Tags":"bell"
+  };
+  if(token) headers["Authorization"]=`Bearer ${token}`;
+  const res=await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`,{method:"POST",headers,body:message});
+  if(!res.ok){
+    const txt=await res.text();
+    throw new Error(`Push fehlgeschlagen (${res.status}): ${txt.slice(0,120)}`);
+  }
+  return true;
+}
+function buildTaskPushText(lines, kv){
+  const out=["Neue Aufgabe","",...lines];
+  if(kv.length){
+    out.push("");
+    kv.forEach(([k,v])=>out.push(`${k}: ${v}`));
+  }
+  return out.join("\n");
+}
+async function pushCurrentTask(lines, kv){
+  try{
+    await sendNtfyPush(buildTaskPushText(lines, kv), "Neue Aufgabe");
+    showToast("Push gesendet.");
+  }catch(e){
+    setError(String(e.message||e));
+  }
 }
 
 async function loadCSV(){
@@ -324,6 +385,10 @@ function buildResult(){
     kvEl.appendChild(k1); kvEl.appendChild(v1);
   }
   $("stepResult").style.display="block";
+
+  if($("pushOnBuild").checked){
+    pushCurrentTask(lines, kv);
+  }
 }
 
 function buildCopyText(){
@@ -355,6 +420,14 @@ function wire(){
   };
   $("btnBuild").onclick=buildResult;
   $("btnRandom").onclick=createRandomTaskInRubrik;
+  $("btnPushTest").onclick=async()=>{
+    setError(null);
+    try{ await sendNtfyPush("Testnachricht vom Control Panel", "Push-Test"); showToast("Push-Test gesendet."); }
+    catch(e){ setError(String(e.message||e)); }
+  };
+  $("pushTopic").onchange=savePushSettings;
+  $("pushToken").onchange=savePushSettings;
+  $("pushOnBuild").onchange=savePushSettings;
 
   $("btnCopy").onclick=async()=>{
     const txt=buildCopyText();
@@ -377,8 +450,8 @@ function wire(){
 }
 
 (async()=>{
-  try{ await loadCSV(); wire(); resetAll(); }
-  catch(e){ wire(); setError(String(e.message||e)); }
+  try{ await loadCSV(); wire(); restorePushSettings(); resetAll(); }
+  catch(e){ wire(); restorePushSettings(); setError(String(e.message||e)); }
 })();
 </script>
 </body>
