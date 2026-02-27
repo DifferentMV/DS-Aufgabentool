@@ -40,7 +40,7 @@ button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box
   <h1>✨ Kinky Glam Logbuch ✨</h1>
 
   <div class="card">
-    <div class="section-title">🧩 Aufgabe aus Control Panel</div>
+    <div class="section-title"> Aufgabe aus Control Panel</div>
     <select id="modeSelect">
       <option value="">Modus wählen</option>
       <option value="Aufgabe">Aufgabe</option>
@@ -400,7 +400,6 @@ function formatDateTimeParts(d){
   const time = d.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"});
   return {date, time};
 }
-
 function buildReportText(entry){
   const lines=[
     "Folgende Aufgabe wurde ausgeführt:",
@@ -499,6 +498,38 @@ function mergeTaskIntoInbox(task){
   return true;
 }
 
+function buildTaskFromPlainMessage(evt){
+  const title=String(evt.title||"").trim();
+  const message=String(evt.message||"").trim();
+  if(title!=="Neue Aufgabe" || !message) return null;
+
+  const rows=message.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  if(!rows.length) return null;
+
+  const cleaned = rows[0]==="Neue Aufgabe" ? rows.slice(1) : rows;
+  const lines=[];
+  const kv=[];
+  for(const row of cleaned){
+    if(row.includes(":")){
+      const p=row.split(":");
+      const key=(p.shift()||"").trim();
+      const value=p.join(":").trim();
+      if(key && value) kv.push([key,value]);
+    }else{
+      lines.push(row);
+    }
+  }
+  if(!lines.length) return null;
+
+  return {
+    id: `task-fallback-${evt.id || Date.now()}-${Math.floor(Math.random()*10000)}`,
+    createdAt: evt.time ? new Date(evt.time * 1000).toISOString() : new Date().toISOString(),
+    lines,
+    kv,
+    status:"open"
+  };
+}
+
 async function importTasksFromTopic(){
   setError(null);
   setSyncStatus("Import läuft ...");
@@ -532,19 +563,29 @@ async function importTasksFromTopic(){
       return;
     }
     let imported=0;
+    let fallbackImported=0;
     for(const line of lines){
       let evt;
       try{ evt=JSON.parse(line); }catch{ continue; }
       const msg=evt.message || "";
-      if(!msg.startsWith(TASK_PUSH_PREFIX)) continue;
-      let task;
-      try{ task=JSON.parse(msg.slice(TASK_PUSH_PREFIX.length)); }catch{ continue; }
-      if(mergeTaskIntoInbox(task)) imported++;
+      let task=null;
+
+      if(msg.startsWith(TASK_PUSH_PREFIX)){
+        try{ task=JSON.parse(msg.slice(TASK_PUSH_PREFIX.length)); }catch{ task=null; }
+      }
+
+      if(!task){
+        task=buildTaskFromPlainMessage(evt);
+        if(task) fallbackImported++;
+      }
+
+      if(task && mergeTaskIntoInbox(task)) imported++;
     }
     renderOpenTasks();
     if(imported>0) {
       showToast(`${imported} neue Aufgabe(n) importiert.`);
-      setSyncStatus(`Import erfolgreich: ${imported} neue Aufgabe(n) geladen.`);
+      if(fallbackImported>0) setSyncStatus(`Import erfolgreich: ${imported} Aufgabe(n) geladen (davon ${fallbackImported} aus Standard-Push).`);
+      else setSyncStatus(`Import erfolgreich: ${imported} neue Aufgabe(n) geladen.`);
     } else {
       showToast("Keine neuen Aufgaben gefunden.");
       setSyncStatus("Import ausgeführt: Keine neuen Aufgaben im Kanal gefunden.");
@@ -560,7 +601,6 @@ function summarizeTask(task){
   const kv=(task.kv||[]).map(([k,v])=>`${k}: ${v}`).join(" · ");
   return kv ? `${main} · ${kv}` : main;
 }
-
 async function sendDonePush(task){
   const summary=summarizeTask(task);
   await sendNtfyPush(`Erledigt:
