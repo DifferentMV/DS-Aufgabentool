@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinky Glam Logbuch</title>
+<style>
+:root{
+  --bg:#0a0a0f;--panel:#11111a;--accent1:#ff2f92;--accent2:#00f0ff;--accent3:#b300ff;--text:#f4f4f8;--muted:#9999aa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 10%, rgba(255,47,146,.15), transparent 40%),radial-gradient(circle at 80% 90%, rgba(0,240,255,.15), transparent 40%),var(--bg);font-family:system-ui,-apple-system,sans-serif;color:var(--text)}
+.wrap{max-width:760px;margin:40px auto;padding:20px}
+h1{text-align:center;font-weight:600;letter-spacing:2px;color:var(--accent1);text-shadow:0 0 12px rgba(255,47,146,.6)}
+.card{background:var(--panel);border-radius:18px;padding:20px;margin-bottom:25px;box-shadow:0 0 25px rgba(179,0,255,.15)}
+.section-title{font-weight:600;margin-bottom:12px;color:var(--accent2);text-shadow:0 0 10px rgba(0,240,255,.6)}
+label{display:block;margin-bottom:8px;cursor:pointer}
+input[type="text"], textarea, select{width:100%;background:#1a1a25;border:1px solid #242838;border-radius:10px;padding:10px;color:white;margin-bottom:10px}
+button{width:100%;padding:14px;background:linear-gradient(90deg,var(--accent1),var(--accent3));border:none;border-radius:14px;font-size:16px;font-weight:600;color:white;cursor:pointer;box-shadow:0 0 20px rgba(255,47,146,.5);transition:.2s}
+button:hover{transform:scale(1.01);box-shadow:0 0 30px rgba(255,47,146,.8)}
+button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box-shadow:none;border:1px solid #333}
+.entry{background:#141420;padding:15px;border-radius:14px;margin-bottom:15px;border-left:4px solid var(--accent1)}
+.timestamp{font-size:12px;color:var(--muted);margin-bottom:6px}
+.toast{text-align:center;margin-top:15px;color:var(--accent2);font-weight:600;text-shadow:0 0 10px rgba(0,240,255,.7);min-height:22px}
+.error{display:none;margin-top:10px;padding:10px;border:1px solid #6b2f52;border-radius:10px;background:rgba(255,47,146,.12);color:#ffd3ea}
+.small{color:#9999aa;font-size:12px;line-height:1.45}
+</style>
+</head>
+<body>
+
+<div id="lock" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 20%, rgba(255,47,146,.25), transparent 40%),radial-gradient(circle at 80% 80%, rgba(0,240,255,.18), transparent 40%),#06060b;z-index:9999;padding:20px;">
+  <div style="width:min(520px,100%);background:#11111a;border:1px solid #242838;border-radius:18px;padding:22px;box-shadow:0 0 30px rgba(179,0,255,.18);">
+    <div style="font-weight:700;letter-spacing:1px;color:#ff2f92;text-shadow:0 0 10px rgba(255,47,146,.6);">✨ Zutritt nur für Eingeweihte ✨</div>
+    <div style="margin-top:8px;color:#9999aa;font-size:13px;">Passwort eingeben, dann darfst du rein.</div>
+    <input id="pw" type="password" placeholder="Passwort" style="margin-top:14px;width:100%;background:#1a1a25;border:1px solid #242838;border-radius:12px;padding:12px;color:#f4f4f8;outline:none;" />
+    <button id="unlockBtn" style="margin-top:12px;width:100%;padding:12px;border:none;border-radius:14px;cursor:pointer;font-weight:700;color:#fff;background:linear-gradient(90deg,#ff2f92,#b300ff);box-shadow:0 0 20px rgba(255,47,146,.5);">Entsperren</button>
+    <div id="lockMsg" style="margin-top:10px;color:#00f0ff;display:none;font-weight:700;text-shadow:0 0 10px rgba(0,240,255,.6);">Nope.</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1>✨ Kinky Glam Logbuch ✨</h1>
+
+  <div class="card">
+    <div class="section-title">Aufgabe aus Control Panel</div>
+    <select id="modeSelect">
+      <option value="">Modus wählen</option>
+      <option value="Aufgabe">Aufgabe</option>
+      <option value="Kleidung">Kleidung</option>
+    </select>
+    <select id="bereichSelect" disabled>
+      <option value="">Bereich wählen</option>
+    </select>
+    <select id="itemSelect" disabled>
+      <option value="">Eintrag wählen</option>
+    </select>
+    <input type="text" id="dauer" placeholder="Dauer / Rahmen (optional)">
+    <button type="button" id="randomBtn" class="secondary">Zufallsaufgabe aus Rubrik</button>
+    <label><input type="checkbox" id="done"> Aufgabe ausgeführt</label>
+  </div>
+
+  <div class="card">
+    <div class="section-title">📝 Notiz</div>
+    <textarea id="note" rows="3" placeholder="Optional…"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="section-title">📲 Push ans Handy (Variante A)</div>
+    <input type="text" id="pushTopic" placeholder="ntfy Topic (z.B. mein-geheimer-topic)">
+    <input type="text" id="pushToken" placeholder="Optional: ntfy Access Token">
+    <label><input type="checkbox" id="pushOnSave"> Bei "Eintrag speichern" automatisch Push senden</label>
+
+    <div class="small" style="margin-bottom:10px;">
+      <strong>Push in 3 Schritten:</strong><br>
+      1) Handy-App <em>ntfy</em> öffnen und Topic abonnieren.<br>
+      2) Genau diesen Topic hier eintragen.<br>
+      3) <em>Push testen</em> klicken.
+    </div>
+
+    <button id="pushCheckBtn" class="secondary" type="button">Push-Setup prüfen</button>
+    <button id="pushNowBtn" class="secondary" type="button">Jetzt-ausführen Push senden</button>
+    <button id="pushTestBtn" class="secondary" type="button">Push testen</button>
+    <button id="importTasksNowBtn" class="secondary" type="button">Aufgaben jetzt importieren</button>
+    <div id="syncStatus" class="small" style="margin-top:6px;">Noch kein Aufgaben-Import ausgeführt.</div>
+
+    <div class="section-title" style="margin-top:8px;">⏰ Erinnerungs-Planer</div>
+    <input type="number" id="freqCount" min="1" step="1" placeholder="Häufigkeit: x Mal (z.B. 7)">
+    <select id="scheduleType">
+      <option value="random">Option 1: zufällig im Zeitraum</option>
+      <option value="interval">Option 2: alle x Min ab Uhrzeit</option>
+    </select>
+
+    <div id="randomScheduleBlock">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <input type="time" id="randFrom" value="08:00">
+        <input type="time" id="randTo" value="22:00">
+      </div>
+    </div>
+
+    <div id="intervalScheduleBlock" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <input type="number" id="everyMin" min="1" step="1" placeholder="alle x Min">
+        <input type="time" id="startAt" value="08:00">
+      </div>
+    </div>
+
+    <button id="startReminderBtn" class="secondary" type="button">Erinnerungen starten</button>
+    <button id="stopReminderBtn" class="secondary" type="button">Erinnerungen stoppen</button>
+
+    <div class="small">Push-Ziel: https://ntfy.sh/&lt;topic&gt; · Erinnerungen laufen im geöffneten Tab.</div>
+  </div>
+
+  <button id="saveBtn">Eintrag speichern</button>
+  <button id="reportBtn" class="secondary">Bericht für WhatsApp erstellen</button>
+  <button id="clearBtn" class="secondary">Einträge löschen</button>
+
+  <div class="toast" id="toast"></div>
+  <div class="error" id="err"></div>
+
+  <hr style="margin:40px 0;border-color:#222">
+
+  <div class="card">
+    <div class="section-title">📥 Offene Aufgaben (von Anja)</div>
+    <button id="importTasksBtn" class="secondary" type="button">Neue Aufgaben aus Push-Kanal holen</button>
+    <div id="openTasks"></div>
+  </div>
+
+  <div id="entries"></div>
+</div>
+
+<script>
+/* Hinweis: Passwortschutz im Frontend ist "nur Optik" – wer den Code sieht, sieht auch das Passwort.
+   Für euren Zweck (privat, auf GitHub Pages) ok, aber nicht als echte Security verstehen. */
+const APP_PASSWORD = "CHANGE_ME";
+const LOG_KEY = "kinkyLog";
+const TASK_INBOX_KEY = "taskInbox";
+const TASK_PUSH_PREFIX = "TASK_INBOX_V1:";
+let DATA=[];
+const $=id=>document.getElementById(id);
+
+function setError(msg){
+  const err=$("err");
+  if(!msg){err.style.display="none";err.textContent="";return;}
+  err.style.display="block";err.textContent=msg;
+}
+function showToast(msg){
+  $("toast").textContent=msg;
+  setTimeout(()=>{$("toast").textContent="";},1700);
+}
+function setSyncStatus(msg, isError=false){
+  const el=$("syncStatus");
+  if(!el) return;
+  el.textContent=msg;
+  el.style.color=isError ? "#ff9ec8" : "#9999aa";
+}
+
+function checkPushSetup({needTask=false}={}){
+  const topic=$("pushTopic").value.trim();
+  if(!topic){
+    setError("Topic fehlt. Bitte in der ntfy-App einen Topic abonnieren und hier exakt eintragen.");
+    return false;
+  }
+  if(topic.includes("http://") || topic.includes("https://") || topic.includes("ntfy.sh")){
+    setError("Bitte nur den Topic-Namen eintragen (z.B. my-secret-task-topic-4711), nicht die ganze URL.");
+    return false;
+  }
+  if(needTask){
+    const bereich=$("bereichSelect").value;
+    const aufgabe=$("itemSelect").value;
+    if(!bereich || !aufgabe){
+      setError("Für 'Jetzt ausführen' bitte erst Bereich und Aufgabe wählen.");
+      return false;
+    }
+  }
+  setError(null);
+  return true;
+}
+
+// ---------------- CSV Laden (robust) ----------------
+async function loadCSV(){
+  const res = await fetch("control_panel.csv", {cache:"no-store"});
+  if(!res.ok) throw new Error("control_panel.csv nicht gefunden.");
+  const text = await res.text();
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+  const header = lines.shift();
+  const sep = header.includes(";") ? ";" : ",";
+  const cols = header.split(sep).map(s=>s.trim().toLowerCase());
+  const idx = {typ:cols.indexOf("typ"),bereich:cols.indexOf("bereich"),titel:cols.indexOf("titel")};
+  if(Object.values(idx).some(v=>v<0)) throw new Error("CSV-Header erwartet: typ;bereich;titel;...");
+  DATA = lines.map(line=>{
+    const p=line.split(sep).map(x=>(x??"").trim());
+    return {typ:p[idx.typ], bereich:p[idx.bereich], titel:p[idx.titel]};
+  }).filter(r=>r.typ && r.bereich && r.titel);
+}
+
+// ---------------- Selects ----------------
+function renderBereiche(){
+  const mode=$("modeSelect").value;
+  const b=$("bereichSelect");
+  b.innerHTML='<option value="">Bereich wählen</option>';
+  $("itemSelect").innerHTML='<option value="">Eintrag wählen</option>';
+  $("itemSelect").disabled=true;
+
+  if(!mode){ b.disabled=true; return; }
+
+  const bereiche=[...new Set(DATA.filter(r=>r.typ===mode).map(r=>r.bereich))]
+    .sort((a,c)=>a.localeCompare(c,"de"));
+
+  for(const name of bereiche){
+    const o=document.createElement("option");
+    o.value=name; o.textContent=name;
+    b.appendChild(o);
+  }
+  b.disabled=false;
+}
+
+function renderItems(){
+  const mode=$("modeSelect").value;
+  const bereich=$("bereichSelect").value;
+  const i=$("itemSelect");
+  i.innerHTML='<option value="">Eintrag wählen</option>';
+
+  if(!mode || !bereich){ i.disabled=true; return; }
+
+  const items=DATA.filter(r=>r.typ===mode && r.bereich===bereich)
+    .sort((a,b)=>a.titel.localeCompare(b.titel,"de"));
+
+  for(const it of items){
+    const o=document.createElement("option");
+    o.value=it.titel; o.textContent=it.titel;
+    i.appendChild(o);
+  }
+  i.disabled=false;
+}
+
+function pickRandomItem(){
+  setError(null);
+  const mode=$("modeSelect").value;
+  const bereich=$("bereichSelect").value;
+  if(!mode){ setError("Bitte zuerst einen Modus wählen."); return; }
+  if(!bereich){ setError("Bitte zuerst einen Bereich wählen."); return; }
+  const items=DATA.filter(r=>r.typ===mode && r.bereich===bereich);
+  if(!items.length){ setError("In dieser Rubrik sind keine Einträge vorhanden."); return; }
+  const randomItem=items[Math.floor(Math.random()*items.length)];
+  $("itemSelect").value=randomItem.titel;
+  showToast("🎲 Zufallseintrag gewählt.");
+}
+
+// ---------------- Storage ----------------
+function getEntries(){ return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); }
+function setEntries(data){ localStorage.setItem(LOG_KEY, JSON.stringify(data)); }
+
+const PUSH_SETTINGS_KEY = "kinkyPushSettings";
+function getPushSettings(){ return JSON.parse(localStorage.getItem(PUSH_SETTINGS_KEY) || "{}"); }
+function savePushSettings(){
+  const settings={
+    topic: $("pushTopic").value.trim(),
+    token: $("pushToken").value.trim(),
+    auto: $("pushOnSave").checked
+  };
+  localStorage.setItem(PUSH_SETTINGS_KEY, JSON.stringify(settings));
+}
+function restorePushSettings(){
+  const s=getPushSettings();
+  if(s.topic) $("pushTopic").value=s.topic;
+  if(s.token) $("pushToken").value=s.token;
+  $("pushOnSave").checked=!!s.auto;
+}
+
+async function sendNtfyPush(message, title){
+  const topic=$("pushTopic").value.trim();
+  if(!topic){ setError("Bitte ntfy Topic eintragen."); return false; }
+  const token=$("pushToken").value.trim();
+  const headers={
+    "Content-Type":"text/plain; charset=utf-8",
+    "Title": title || "Jetzt ausführen",
+    "Priority":"default",
+    "Tags":"bell"
+  };
+  if(token) headers["Authorization"]=`Bearer ${token}`;
+
+  const res = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+    method:"POST", headers, body:message
+  });
+  if(!res.ok){
+    const txt=await res.text();
+    throw new Error(`Push fehlgeschlagen (${res.status}): ${txt.slice(0,120)}`);
+  }
+  return true;
+}
+
+function buildNowMessage(){
+  const bereich=$("bereichSelect").value;
+  const aufgabe=$("itemSelect").value;
+  if(!bereich || !aufgabe){ throw new Error("Bitte erst Bereich und Aufgabe wählen."); }
+  return `Jetzt ausführen\nKink: ${bereich}\nAufgabe: ${aufgabe}`;
+}
+
+async function pushNow(){
+  setError(null);
+  try{
+    if(!checkPushSetup({needTask:true})) return;
+    const message=buildNowMessage();
+    await sendNtfyPush(message, "Jetzt ausführen");
+    showToast("Push gesendet.");
+  }catch(e){
+    setError(String(e.message||e));
+  }
+}
+
+async function pushTest(){
+  setError(null);
+  try{
+    if(!checkPushSetup()) return;
+    await sendNtfyPush("Testnachricht vom Logbook", "Push-Test");
+    showToast("Push-Test gesendet.");
+  }catch(e){
+    setError(String(e.message||e));
+  }
+}
+
+// ---------------- Reminder ----------------
+let reminderTimers=[];
+function clearReminderTimers(){
+  reminderTimers.forEach(t=>clearTimeout(t));
+  reminderTimers=[];
+}
+function parseTodayTime(value){
+  const [h,m]=String(value||"").split(":").map(Number);
+  if(Number.isNaN(h) || Number.isNaN(m)) return null;
+  const d=new Date(); d.setHours(h,m,0,0); return d;
+}
+function buildReminderMessage(){
+  const bereich=$("bereichSelect").value;
+  const aufgabe=$("itemSelect").value;
+  if(!bereich || !aufgabe) throw new Error("Bitte erst Bereich und Aufgabe wählen.");
+  return `Jetzt ausführen\nKink: ${bereich}\nAufgabe: ${aufgabe}`;
+}
+function schedulePushAt(date, message){
+  const delay=date.getTime()-Date.now();
+  if(delay<=0) return false;
+  const id=setTimeout(async()=>{
+    try{ await sendNtfyPush(message, "Erinnerung an Aufgabe"); }
+    catch(e){ setError(String(e.message||e)); }
+  }, delay);
+  reminderTimers.push(id);
+  return true;
+}
+function pickRandomMoments(fromDate, toDate, count){
+  const min=fromDate.getTime(), max=toDate.getTime();
+  const moments=[];
+  for(let i=0;i<count;i++){
+    const t=min+Math.random()*(max-min);
+    moments.push(new Date(t));
+  }
+  return moments.sort((a,b)=>a-b);
+}
+function setScheduleVisibility(){
+  const t=$("scheduleType").value;
+  $("randomScheduleBlock").style.display = t==="random" ? "block" : "none";
+  $("intervalScheduleBlock").style.display = t==="interval" ? "block" : "none";
+}
+async function startReminders(){
+  setError(null);
+  clearReminderTimers();
+  try{
+    const count=Math.max(1, parseInt($("freqCount").value||"0",10));
+    if(!Number.isFinite(count) || count<1) throw new Error("Bitte Häufigkeit (x Mal) > 0 setzen.");
+    const message=buildReminderMessage();
+    const mode=$("scheduleType").value;
+    let planned=0;
+
+    if(mode==="random"){
+      const from=parseTodayTime($("randFrom").value);
+      const to=parseTodayTime($("randTo").value);
+      if(!from || !to) throw new Error("Bitte Zeitraum von/bis setzen.");
+      if(to<=from) throw new Error("Zeitraum ungültig: 'bis' muss nach 'von' liegen.");
+      const moments=pickRandomMoments(from,to,count);
+      moments.forEach(d=>{ if(schedulePushAt(d,message)) planned++; });
+    } else {
+      const every=Math.max(1, parseInt($("everyMin").value||"0",10));
+      if(!Number.isFinite(every) || every<1) throw new Error("Bitte Intervall in Minuten > 0 setzen.");
+      let next=parseTodayTime($("startAt").value);
+      if(!next) throw new Error("Bitte Start-Uhrzeit setzen.");
+      while(next.getTime()<=Date.now()) next=new Date(next.getTime()+every*60*1000);
+      for(let i=0;i<count;i++){
+        if(schedulePushAt(next,message)) planned++;
+        next=new Date(next.getTime()+every*60*1000);
+      }
+    }
+
+    if(planned===0) throw new Error("Keine zukünftigen Termine geplant. Bitte Zeiten prüfen.");
+    showToast(`${planned} Erinnerung(en) geplant.`);
+  }catch(e){
+    setError(String(e.message||e));
+  }
+}
+function stopReminders(){
+  clearReminderTimers();
+  showToast("Erinnerungen gestoppt.");
+}
+
+// ---------------- WhatsApp Report ----------------
+function formatDateTimeParts(d){
+  const date = d.toLocaleDateString("de-DE");
+  const time = d.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"});
+  return {date, time};
+}
+function buildReportText(entry){
+  const lines=[
+    "Folgende Aufgabe wurde ausgeführt:",
+    "",
+    `Kink: ${entry.bereich}`,
+    `mit folgendem Inhalt: ${entry.aufgabe}`,
+    `am: ${entry.date}`,
+    `Uhrzeit: ${entry.timeOnly}`
+  ];
+  if(entry.dauer) lines.push(`Dauer/Zeit/Häufigkeit: ${entry.dauer}`);
+  if(entry.note) lines.push(`Notiz: ${entry.note}`);
+  return lines.join("\n");
+}
+function createReportFromForm(){
+  setError(null);
+  const bereich=$("bereichSelect").value;
+  const aufgabe=$("itemSelect").value;
+  if(!bereich || !aufgabe){ setError("Bitte erst Bereich und Aufgabe wählen."); return; }
+  if(!$("done").checked){ setError("Für einen Ausführungsbericht bitte 'Aufgabe ausgeführt' aktivieren."); return; }
+  const dt = formatDateTimeParts(new Date());
+  const entry={
+    bereich, aufgabe,
+    date:dt.date, timeOnly:dt.time,
+    dauer:$("dauer").value.trim(),
+    note:$("note").value.trim()
+  };
+  const report=buildReportText(entry);
+  const waUrl=`https://wa.me/?text=${encodeURIComponent(report)}`;
+  window.open(waUrl, "_blank");
+  try{ navigator.clipboard.writeText(report); }catch{}
+  showToast("Bericht für WhatsApp erstellt.");
+}
+
+// ---------------- Logbook speichern ----------------
+function saveEntry(){
+  setError(null);
+  const mode=$("modeSelect").value;
+  const bereich=$("bereichSelect").value;
+  const aufgabe=$("itemSelect").value;
+  if(!mode || !bereich || !aufgabe){ setError("Bitte Modus, Bereich und Eintrag wählen."); return; }
+
+  const now = new Date();
+  const dt = formatDateTimeParts(now);
+  const entry={
+    time:now.toLocaleString("de-DE"),
+    date:dt.date,
+    timeOnly:dt.time,
+    mode, bereich, aufgabe,
+    done:$("done").checked,
+    dauer:$("dauer").value.trim(),
+    note:$("note").value.trim()
+  };
+
+  const data=getEntries();
+  data.unshift(entry);
+  setEntries(data);
+
+  $("dauer").value="";
+  $("note").value="";
+  $("done").checked=false;
+
+  showToast("✨ Notiert. ✨");
+  renderEntries();
+
+  if($("pushOnSave").checked){
+    pushNow();
+  }
+}
+
+function deleteEntry(index){
+  if(!confirm("Diesen Eintrag wirklich entfernen?")) return;
+  const data=getEntries();
+  data.splice(index,1);
+  setEntries(data);
+  renderEntries();
+  showToast("✨ Entfernt. ✨");
+}
+function clearAll(){
+  if(!confirm("Wirklich ALLE Einträge löschen?")) return;
+  localStorage.removeItem(LOG_KEY);
+  renderEntries();
+  showToast("✨ Weg. ✨");
+}
+
+// ---------------- Inbox / Import ----------------
+function getInbox(){ return JSON.parse(localStorage.getItem(TASK_INBOX_KEY) || "[]"); }
+function setInbox(data){ localStorage.setItem(TASK_INBOX_KEY, JSON.stringify(data)); }
+function mergeTaskIntoInbox(task){
+  if(!task || !task.id) return false;
+  const inbox=getInbox();
+  if(inbox.some(t=>t.id===task.id)) return false;
+  inbox.unshift(task);
+  setInbox(inbox);
+  return true;
+}
+function buildTaskFromPlainMessage(evt){
+  const title=String(evt.title||"").trim();
+  const message=String(evt.message||"").trim();
+  if(title!=="Neue Aufgabe" || !message) return null;
+
+  const rows=message.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  if(!rows.length) return null;
+
+  const cleaned = rows[0]==="Neue Aufgabe" ? rows.slice(1) : rows;
+  const lines=[];
+  const kv=[];
+  for(const row of cleaned){
+    if(row.includes(":")){
+      const p=row.split(":");
+      const key=(p.shift()||"").trim();
+      const value=p.join(":").trim();
+      if(key && value) kv.push([key,value]);
+    }else{
+      lines.push(row);
+    }
+  }
+  if(!lines.length) return null;
+
+  return {
+    id: `task-fallback-${evt.id || Date.now()}-${Math.floor(Math.random()*10000)}`,
+    createdAt: evt.time ? new Date(evt.time * 1000).toISOString() : new Date().toISOString(),
+    lines, kv, status:"open"
+  };
+}
+
+let importInFlight=false;
+
+async function importTasksFromTopic(){
+  if(importInFlight) return; // verhindert Parallel-Läufe
+  importInFlight=true;
+
+  setError(null);
+  setSyncStatus("Import läuft ...");
+
+  const topic=$("pushTopic").value.trim();
+  if(!topic){
+    setError("Für den Import bitte zuerst den ntfy Topic eintragen.");
+    setSyncStatus("Import nicht möglich: Topic fehlt.", true);
+    importInFlight=false;
+    return;
+  }
+
+  const token=$("pushToken").value.trim();
+  const headers={"Accept":"application/x-ndjson"};
+  if(token) headers["Authorization"]=`Bearer ${token}`;
+
+  try{
+    const controller = new AbortController();
+    const timer = setTimeout(()=>controller.abort(), 10000);
+
+    const res=await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}/json?since=168h&poll=1`,{
+      headers, signal: controller.signal
+    });
+
+    clearTimeout(timer);
+
+    if(!res.ok){
+      const txt=await res.text();
+      throw new Error(`Import fehlgeschlagen (${res.status}): ${txt.slice(0,120)}`);
+    }
+
+    const text=await res.text();
+    const lines=text.split(/\r?\n/).filter(l => l.trim().length);
+
+    if(!lines.length){
+      setSyncStatus("Import ausgeführt: Keine Daten vom Kanal empfangen.");
+      showToast("Keine Daten vom Kanal empfangen.");
+      importInFlight=false;
+      return;
+    }
+
+    let imported=0;
+    let fallbackImported=0;
+
+    for(const line of lines){
+      let evt;
+      try{ evt=JSON.parse(line); }catch{ continue; }
+      const msg=evt.message || "";
+      let task=null;
+
+      if(msg.startsWith(TASK_PUSH_PREFIX)){
+        try{ task=JSON.parse(msg.slice(TASK_PUSH_PREFIX.length)); }catch{ task=null; }
+      }
+
+      if(!task){
+        task=buildTaskFromPlainMessage(evt);
+        if(task) fallbackImported++;
+      }
+
+      if(task && mergeTaskIntoInbox(task)) imported++;
+    }
+
+    renderOpenTasks();
+
+    if(imported>0) {
+      showToast(`${imported} neue Aufgabe(n) importiert.`);
+      if(fallbackImported>0) setSyncStatus(`Import erfolgreich: ${imported} Aufgabe(n) geladen (davon ${fallbackImported} aus Standard-Push).`);
+      else setSyncStatus(`Import erfolgreich: ${imported} neue Aufgabe(n) geladen.`);
+    } else {
+      showToast("Keine neuen Aufgaben gefunden.");
+      setSyncStatus("Import ausgeführt: Keine neuen Aufgaben im Kanal gefunden.");
+    }
+  }catch(e){
+    setError(String(e.message||e));
+    setSyncStatus(`Importfehler: ${String(e.message||e)}`, true);
+  }finally{
+    importInFlight=false;
+  }
+}
+
+function summarizeTask(task){
+  const main=(task.lines||[]).join(" | ");
+  const kv=(task.kv||[]).map(([k,v])=>`${k}: ${v}`).join(" · ");
+  return kv ? `${main} · ${kv}` : main;
+}
+async function sendDonePush(task){
+  const summary=summarizeTask(task);
+  await sendNtfyPush(`Erledigt:\n${summary}`, "Aufgabe erledigt");
+}
+async function completeTask(taskId){
+  setError(null);
+  const inbox=getInbox();
+  const idx=inbox.findIndex(t=>t.id===taskId);
+  if(idx<0){ setError("Aufgabe nicht gefunden."); return; }
+  const task=inbox[idx];
+
+  const now=new Date();
+  const dt=formatDateTimeParts(now);
+  const entry={
+    time:now.toLocaleString("de-DE"),
+    date:dt.date,
+    timeOnly:dt.time,
+    mode:"Aufgabe",
+    bereich:"Import",
+    aufgabe:(task.lines||[]).join(" / "),
+    done:true,
+    dauer:(task.kv||[]).find(x=>x[0]==="Dauer")?.[1] || "",
+    note:`Importiert aus Anja-Aufgabe (${dt.time})`
+  };
+  const data=getEntries();
+  data.unshift(entry);
+  setEntries(data);
+
+  inbox.splice(idx,1);
+  setInbox(inbox);
+
+  try{
+    await sendDonePush(task);
+    showToast("Aufgabe erledigt gemeldet.");
+  }catch(e){
+    setError(`Erledigt gespeichert, aber Push fehlgeschlagen: ${String(e.message||e)}`);
+  }
+
+  renderOpenTasks();
+  renderEntries();
+}
+
+function renderOpenTasks(){
+  const box=$("openTasks");
+  const inbox=getInbox();
+  box.innerHTML="";
+  if(!inbox.length){
+    box.innerHTML='<div class="small">Keine offenen Aufgaben.</div>';
+    return;
+  }
+  inbox.forEach(task=>{
+    const div=document.createElement("div");
+    div.className="entry";
+    const created=task.createdAt ? new Date(task.createdAt).toLocaleString("de-DE") : "-";
+    const lines=(task.lines||[]).join("<br>");
+    const kv=(task.kv||[]).map(([k,v])=>`${k}: ${v}`).join("<br>");
+    div.innerHTML=`
+      <div class="timestamp">Erstellt: ${created}</div>
+      ${lines || "(ohne Inhalt)"}<br>
+      ${kv ? kv+"<br>" : ""}
+      <button data-complete="${task.id}" style="margin-top:10px;background:#1a1a25;border:1px solid #333;border-radius:8px;padding:6px 10px;color:#00f0ff;cursor:pointer;">Als erledigt bestätigen</button>
+    `;
+    box.appendChild(div);
+  });
+  box.querySelectorAll("button[data-complete]").forEach(btn=>{
+    btn.onclick=()=>completeTask(btn.getAttribute("data-complete"));
+  });
+}
+
+function renderEntries(){
+  const container=$("entries");
+  container.innerHTML="";
+  const data=getEntries();
+  data.forEach((e,index)=>{
+    const div=document.createElement("div");
+    div.className="entry";
+    div.innerHTML=`
+      <div class="timestamp">${e.time}</div>
+      <strong>${e.mode}</strong> · ${e.bereich}<br>
+      🧩 ${e.aufgabe}<br>
+      ${typeof e.done === "boolean" ? (e.done ? "✅ Ausgeführt<br>" : "⬜ Nicht ausgeführt<br>") : ""}
+      ${e.dauer ? `⏱️ ${e.dauer}<br>` : ""}
+      ${e.note ? `📝 ${e.note}<br>` : ""}
+      <button data-index="${index}" style="margin-top:10px;background:#1a1a25;border:1px solid #333;border-radius:8px;padding:6px 10px;color:#ff2f92;cursor:pointer;">Entfernen</button>
+    `;
+    container.appendChild(div);
+  });
+  container.querySelectorAll("button[data-index]").forEach(btn=>{
+    btn.onclick=()=>deleteEntry(Number(btn.getAttribute("data-index")));
+  });
+}
+
+// ---------------- Lock ----------------
+function unlockOk(){
+  $("lock").style.display="none";
+  sessionStorage.setItem("kinkyLogUnlocked", "1");
+}
+function tryUnlock(){
+  if($("pw").value===APP_PASSWORD){ $("lockMsg").style.display="none"; unlockOk(); }
+  else { $("lockMsg").style.display="block"; $("pw").focus(); $("pw").select(); }
+}
+
+// ---------------- Wire / Init ----------------
+function wire(){
+  $("unlockBtn").onclick=tryUnlock;
+  $("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") tryUnlock(); });
+  if(sessionStorage.getItem("kinkyLogUnlocked")==="1") unlockOk();
+
+  $("modeSelect").onchange=()=>{ renderBereiche(); renderItems(); };
+  $("bereichSelect").onchange=renderItems;
+
+  $("saveBtn").onclick=saveEntry;
+  $("reportBtn").onclick=createReportFromForm;
+  $("randomBtn").onclick=pickRandomItem;
+
+  $("pushCheckBtn").onclick=()=>{
+    if(checkPushSetup()){ showToast("Push-Setup sieht gut aus. Jetzt 'Push testen' klicken."); }
+  };
+  $("importTasksNowBtn").onclick=importTasksFromTopic;
+  $("pushNowBtn").onclick=pushNow;
+  $("pushTestBtn").onclick=pushTest;
+
+  $("startReminderBtn").onclick=startReminders;
+  $("stopReminderBtn").onclick=stopReminders;
+  $("scheduleType").onchange=setScheduleVisibility;
+
+  $("pushTopic").onchange=savePushSettings;
+  $("pushToken").onchange=savePushSettings;
+  $("pushOnSave").onchange=savePushSettings;
+
+  $("clearBtn").onclick=clearAll;
+  $("importTasksBtn").onclick=importTasksFromTopic;
+
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState==="visible") importTasksFromTopic();
+  });
+}
+
+(async()=>{
+  try{
+    await loadCSV();
+  }catch(e){
+    setError(String(e.message||e));
+  }
+
+  wire();
+  restorePushSettings();
+  setScheduleVisibility();
+
+  // Initial Selects korrekt befüllen
+  renderBereiche();
+  renderItems();
+
+  setSyncStatus("Import bereit. Klicke auf 'Aufgaben jetzt importieren'.");
+  renderOpenTasks();
+  renderEntries();
+
+  // Optional: automatischer Import (kannst du auch auskommentieren, wenn’s nervt)
+  importTasksFromTopic();
+  setInterval(importTasksFromTopic, 30000);
+})();
+</script>
+</body>
+</html>
