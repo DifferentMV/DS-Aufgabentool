@@ -67,8 +67,17 @@ button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box
     <input type="text" id="pushTopic" placeholder="ntfy Topic (z.B. mein-geheimer-topic)">
     <input type="text" id="pushToken" placeholder="Optional: ntfy Access Token">
     <label><input type="checkbox" id="pushOnSave"> Bei "Eintrag speichern" automatisch Push senden</label>
+    <div class="small" style="color:#9999aa;font-size:12px;margin-bottom:10px;line-height:1.45;">
+      <strong>Push in 3 Schritten:</strong><br>
+      1) Handy-App <em>ntfy</em> öffnen und Topic abonnieren.<br>
+      2) Genau diesen Topic hier eintragen.<br>
+      3) <em>Push testen</em> klicken.
+    </div>
+    <button id="pushCheckBtn" class="secondary" type="button">Push-Setup prüfen</button>
     <button id="pushNowBtn" class="secondary" type="button">Jetzt-ausführen Push senden</button>
     <button id="pushTestBtn" class="secondary" type="button">Push testen</button>
+    <button id="importTasksNowBtn" class="secondary" type="button">Aufgaben jetzt importieren</button>
+    <div id="syncStatus" class="small" style="color:#9999aa;font-size:12px;margin-top:6px;">Noch kein Aufgaben-Import ausgeführt.</div>
 
     <div class="section-title" style="margin-top:8px;">⏰ Erinnerungs-Planer</div>
     <input type="number" id="freqCount" min="1" step="1" placeholder="Häufigkeit: x Mal (z.B. 7)">
@@ -105,12 +114,20 @@ button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box
   <div class="error" id="err"></div>
 
   <hr style="margin:40px 0;border-color:#222">
+  <div class="card">
+    <div class="section-title">📥 Offene Aufgaben (von Anja)</div>
+    <button id="importTasksBtn" class="secondary" type="button">Neue Aufgaben aus Push-Kanal holen</button>
+    <div id="openTasks"></div>
+  </div>
+
   <div id="entries"></div>
 </div>
 
 <script>
 const APP_PASSWORD = "Anja&Marlo2020";
 const LOG_KEY = "kinkyLog";
+const TASK_INBOX_KEY = "taskInbox";
+const TASK_PUSH_PREFIX = "TASK_INBOX_V1:";
 let DATA=[];
 const $=id=>document.getElementById(id);
 
@@ -122,6 +139,35 @@ function setError(msg){
 function showToast(msg){
   $("toast").textContent=msg;
   setTimeout(()=>{$("toast").textContent="";},1700);
+}
+
+function setSyncStatus(msg, isError=false){
+  const el=$("syncStatus");
+  if(!el) return;
+  el.textContent=msg;
+  el.style.color=isError ? "#ff9ec8" : "#9999aa";
+}
+
+function checkPushSetup({needTask=false}={}){
+  const topic=$("pushTopic").value.trim();
+  if(!topic){
+    setError("Topic fehlt. Bitte in der ntfy-App einen Topic abonnieren und hier exakt eintragen.");
+    return false;
+  }
+  if(topic.includes("http://") || topic.includes("https://") || topic.includes("ntfy.sh")){
+    setError("Bitte nur den Topic-Namen eintragen (z.B. my-secret-task-topic-4711), nicht die ganze URL.");
+    return false;
+  }
+  if(needTask){
+    const bereich=$("bereichSelect").value;
+    const aufgabe=$("itemSelect").value;
+    if(!bereich || !aufgabe){
+      setError("Für 'Jetzt ausführen' bitte erst Bereich und Aufgabe wählen.");
+      return false;
+    }
+  }
+  setError(null);
+  return true;
 }
 
 async function loadCSV(){
@@ -239,6 +285,7 @@ function buildNowMessage(){
 async function pushNow(){
   setError(null);
   try{
+    if(!checkPushSetup({needTask:true})) return;
     const message=buildNowMessage();
     await sendNtfyPush(message, "Jetzt ausführen");
     showToast("Push gesendet.");
@@ -250,6 +297,7 @@ async function pushNow(){
 async function pushTest(){
   setError(null);
   try{
+    if(!checkPushSetup()) return;
     await sendNtfyPush("Testnachricht vom Logbook", "Push-Test");
     showToast("Push-Test gesendet.");
   }catch(e){
@@ -438,6 +486,142 @@ function clearAll(){
   showToast("✨ Weg. ✨");
 }
 
+
+function getInbox(){ return JSON.parse(localStorage.getItem(TASK_INBOX_KEY) || "[]"); }
+function setInbox(data){ localStorage.setItem(TASK_INBOX_KEY, JSON.stringify(data)); }
+
+function mergeTaskIntoInbox(task){
+  if(!task || !task.id) return false;
+  const inbox=getInbox();
+  if(inbox.some(t=>t.id===task.id)) return false;
+  inbox.unshift(task);
+  setInbox(inbox);
+  return true;
+}
+
+async function importTasksFromTopic(){
+  setError(null);
+  const topic=$("pushTopic").value.trim();
+  if(!topic){
+    setError("Für den Import bitte zuerst den ntfy Topic eintragen.");
+    setSyncStatus("Import nicht möglich: Topic fehlt.", true);
+    return;
+  }
+  const token=$("pushToken").value.trim();
+  const headers={"Accept":"application/x-ndjson"};
+  if(token) headers["Authorization"]=`Bearer ${token}`;
+
+  try{
+    const res=await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}/json?since=7d`,{headers});
+    if(!res.ok){
+      const txt=await res.text();
+      throw new Error(`Import fehlgeschlagen (${res.status}): ${txt.slice(0,120)}`);
+    }
+    const text=await res.text();
+    const lines=text.split(/\r?\n/).filter(Boolean);
+    let imported=0;
+    for(const line of lines){
+      let evt;
+      try{ evt=JSON.parse(line); }catch{ continue; }
+      const msg=evt.message || "";
+      if(!msg.startsWith(TASK_PUSH_PREFIX)) continue;
+      let task;
+      try{ task=JSON.parse(msg.slice(TASK_PUSH_PREFIX.length)); }catch{ continue; }
+      if(mergeTaskIntoInbox(task)) imported++;
+    }
+    renderOpenTasks();
+    if(imported>0) {
+      showToast(`${imported} neue Aufgabe(n) importiert.`);
+      setSyncStatus(`Import erfolgreich: ${imported} neue Aufgabe(n) geladen.`);
+    } else {
+      showToast("Keine neuen Aufgaben gefunden.");
+      setSyncStatus("Import ausgeführt: Keine neuen Aufgaben im Kanal gefunden.");
+    }
+  }catch(e){
+    setError(String(e.message||e));
+    setSyncStatus(`Importfehler: ${String(e.message||e)}`, true);
+  }
+}
+
+function summarizeTask(task){
+  const main=(task.lines||[]).join(" | ");
+  const kv=(task.kv||[]).map(([k,v])=>`${k}: ${v}`).join(" · ");
+  return kv ? `${main} · ${kv}` : main;
+}
+
+async function sendDonePush(task){
+  const summary=summarizeTask(task);
+  await sendNtfyPush(`Erledigt:
+${summary}`, "Aufgabe erledigt");
+}
+
+async function completeTask(taskId){
+  setError(null);
+  const inbox=getInbox();
+  const idx=inbox.findIndex(t=>t.id===taskId);
+  if(idx<0){ setError("Aufgabe nicht gefunden."); return; }
+  const task=inbox[idx];
+
+  // Als Log-Eintrag übernehmen
+  const now=new Date();
+  const dt=formatDateTimeParts(now);
+  const entry={
+    time:now.toLocaleString("de-DE"),
+    date:dt.date,
+    timeOnly:dt.time,
+    mode:"Aufgabe",
+    bereich:"Import",
+    aufgabe:(task.lines||[]).join(" / "),
+    done:true,
+    dauer:(task.kv||[]).find(x=>x[0]==="Dauer")?.[1] || "",
+    note:`Importiert aus Anja-Aufgabe (${dt.time})`
+  };
+  const data=getEntries();
+  data.unshift(entry);
+  setEntries(data);
+
+  // aus Inbox entfernen
+  inbox.splice(idx,1);
+  setInbox(inbox);
+
+  try{
+    await sendDonePush(task);
+    showToast("Aufgabe erledigt gemeldet.");
+  }catch(e){
+    setError(`Erledigt gespeichert, aber Push fehlgeschlagen: ${String(e.message||e)}`);
+  }
+
+  renderOpenTasks();
+  renderEntries();
+}
+
+function renderOpenTasks(){
+  const box=$("openTasks");
+  const inbox=getInbox();
+  box.innerHTML="";
+  if(!inbox.length){
+    box.innerHTML='<div class="small">Keine offenen Aufgaben.</div>';
+    return;
+  }
+  inbox.forEach(task=>{
+    const div=document.createElement("div");
+    div.className="entry";
+    const created=task.createdAt ? new Date(task.createdAt).toLocaleString("de-DE") : "-";
+    const lines=(task.lines||[]).join("<br>");
+    const kv=(task.kv||[]).map(([k,v])=>`${k}: ${v}`).join("<br>");
+    div.innerHTML=`
+      <div class="timestamp">Erstellt: ${created}</div>
+      ${lines || "(ohne Inhalt)"}<br>
+      ${kv ? kv+"<br>" : ""}
+      <button data-complete="${task.id}" style="margin-top:10px;background:#1a1a25;border:1px solid #333;border-radius:8px;padding:6px 10px;color:#00f0ff;cursor:pointer;">Als erledigt bestätigen</button>
+    `;
+    box.appendChild(div);
+  });
+  box.querySelectorAll("button[data-complete]").forEach(btn=>{
+    btn.onclick=()=>completeTask(btn.getAttribute("data-complete"));
+  });
+}
+
 function renderEntries(){
   const container=$("entries");
   container.innerHTML="";
@@ -480,6 +664,10 @@ function wire(){
   $("saveBtn").onclick=saveEntry;
   $("reportBtn").onclick=createReportFromForm;
   $("randomBtn").onclick=pickRandomItem;
+  $("pushCheckBtn").onclick=()=>{
+    if(checkPushSetup()){ showToast("Push-Setup sieht gut aus. Jetzt 'Push testen' klicken."); }
+  };
+  $("importTasksNowBtn").onclick=importTasksFromTopic;
   $("pushNowBtn").onclick=pushNow;
   $("pushTestBtn").onclick=pushTest;
   $("startReminderBtn").onclick=startReminders;
@@ -489,6 +677,7 @@ function wire(){
   $("pushToken").onchange=savePushSettings;
   $("pushOnSave").onchange=savePushSettings;
   $("clearBtn").onclick=clearAll;
+  $("importTasksBtn").onclick=importTasksFromTopic;
 }
 
 (async()=>{
@@ -497,6 +686,8 @@ function wire(){
   wire();
   restorePushSettings();
   setScheduleVisibility();
+  importTasksFromTopic();
+  renderOpenTasks();
   renderEntries();
 })();
 </script>
