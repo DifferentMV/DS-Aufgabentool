@@ -64,7 +64,7 @@ button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box
 
   <div class="card">
     <div class="section-title">📲 Push ans Handy (Variante A)</div>
-    <input type="text" id="pushTopic"my-secret-task-topic-4711">
+    <input type="text" id="pushTopic" placeholder="ntfy Topic (z.B. mein-geheimer-topic)">
     <input type="text" id="pushToken" placeholder="Optional: ntfy Access Token">
     <label><input type="checkbox" id="pushOnSave"> Bei "Eintrag speichern" automatisch Push senden</label>
     <div class="small" style="color:#9999aa;font-size:12px;margin-bottom:10px;line-height:1.45;">
@@ -76,7 +76,7 @@ button.secondary{margin-top:10px;background:linear-gradient(90deg,#444,#222);box
     <button id="pushCheckBtn" class="secondary" type="button">Push-Setup prüfen</button>
     <button id="pushNowBtn" class="secondary" type="button">Jetzt-ausführen Push senden</button>
     <button id="pushTestBtn" class="secondary" type="button">Push testen</button>
-    <button id="importTasksNowBtn" class="secondary" type="button">Aufgaben jetzt importieren</button>
+    <button id="importTasksNowBtn" class="secondary" type="button" onclick="importTasksFromTopic()">Aufgaben jetzt importieren</button>
     <div id="syncStatus" class="small" style="color:#9999aa;font-size:12px;margin-top:6px;">Noch kein Aufgaben-Import ausgeführt.</div>
 
     <div class="section-title" style="margin-top:8px;">⏰ Erinnerungs-Planer</div>
@@ -501,6 +501,7 @@ function mergeTaskIntoInbox(task){
 
 async function importTasksFromTopic(){
   setError(null);
+  setSyncStatus("Import läuft ...");
   const topic=$("pushTopic").value.trim();
   if(!topic){
     setError("Für den Import bitte zuerst den ntfy Topic eintragen.");
@@ -512,13 +513,24 @@ async function importTasksFromTopic(){
   if(token) headers["Authorization"]=`Bearer ${token}`;
 
   try{
-    const res=await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}/json?since=168h`,{headers});
+    const controller = new AbortController();
+    const timer = setTimeout(()=>controller.abort(), 10000);
+    const res=await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}/json?since=168h&poll=1`,{
+      headers,
+      signal: controller.signal
+    });
+    clearTimeout(timer);
     if(!res.ok){
       const txt=await res.text();
       throw new Error(`Import fehlgeschlagen (${res.status}): ${txt.slice(0,120)}`);
     }
     const text=await res.text();
     const lines=text.split(/\r?\n/).filter(Boolean);
+    if(!lines.length){
+      setSyncStatus("Import ausgeführt: Keine Daten vom Kanal empfangen.");
+      showToast("Keine Daten vom Kanal empfangen.");
+      return;
+    }
     let imported=0;
     for(const line of lines){
       let evt;
@@ -678,6 +690,10 @@ function wire(){
   $("pushOnSave").onchange=savePushSettings;
   $("clearBtn").onclick=clearAll;
   $("importTasksBtn").onclick=importTasksFromTopic;
+
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState==="visible") importTasksFromTopic();
+  });
 }
 
 (async()=>{
@@ -686,7 +702,9 @@ function wire(){
   wire();
   restorePushSettings();
   setScheduleVisibility();
+  setSyncStatus("Import bereit. Klicke auf 'Aufgaben jetzt importieren'.");
   importTasksFromTopic();
+  setInterval(importTasksFromTopic, 30000);
   renderOpenTasks();
   renderEntries();
 })();
