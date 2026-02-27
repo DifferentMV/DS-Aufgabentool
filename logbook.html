@@ -512,7 +512,7 @@ async function importTasksFromTopic(){
   if(token) headers["Authorization"]=`Bearer ${token}`;
 
   try{
-    const res=await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}/json?since=7d`,{headers});
+    const res=await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}/json?since=168h`,{headers});
     if(!res.ok){
       const txt=await res.text();
       throw new Error(`Import fehlgeschlagen (${res.status}): ${txt.slice(0,120)}`);
